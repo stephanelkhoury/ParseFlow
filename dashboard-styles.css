@@ -1083,3 +1083,99 @@ body {
     color: #ff4757 !important;
     font-weight: 500;
 }
+
+/* Duplicate Detection Styles */
+.duplicate-info {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    border-left: 3px solid #00d4ff;
+}
+
+.duplicate-info details {
+    cursor: pointer;
+}
+
+.duplicate-info summary {
+    color: #00d4ff;
+    font-weight: 500;
+    padding: 5px 0;
+    outline: none;
+    user-select: none;
+}
+
+.duplicate-info summary:hover {
+    color: #ffffff;
+}
+
+.duplicate-list {
+    margin-top: 8px;
+    padding-left: 15px;
+}
+
+.duplicate-item {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.duplicate-item:last-child {
+    border-bottom: none;
+}
+
+.duplicate-item small {
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.4;
+}
+
+.duplicate-summary {
+    margin-top: 20px;
+}
+
+.info-box {
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.info-box i {
+    color: #00d4ff;
+    font-size: 1.2rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.info-box strong {
+    color: #ffffff;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+
+.info-box p {
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Import Summary Grid Adjustments */
+.import-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+/* Summary Card Variations */
+.summary-card.duplicate {
+    border-color: #00d4ff;
+}
+
+.summary-card.duplicate i {
+    color: #00d4ff;
+}

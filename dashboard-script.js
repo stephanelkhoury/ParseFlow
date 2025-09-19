@@ -33,9 +33,26 @@ class ParseFlowDB {
     }
 
     addRecords(newRecords, fileName = 'unknown') {
-        // Add unique IDs and metadata to new records
+        // Check for duplicates and filter out identical records
         const timestamp = new Date().toISOString();
-        const recordsWithMeta = newRecords.map((record, index) => ({
+        const uniqueRecords = [];
+        const duplicateInfo = [];
+        
+        for (const record of newRecords) {
+            const duplicateCheck = this.findDuplicateRecord(record);
+            
+            if (!duplicateCheck) {
+                uniqueRecords.push(record);
+            } else {
+                duplicateInfo.push({
+                    record: record,
+                    duplicateOf: duplicateCheck
+                });
+            }
+        }
+        
+        // Add unique records with metadata
+        const recordsWithMeta = uniqueRecords.map((record, index) => ({
             ...record,
             _id: this.generateId(),
             _source: fileName,
@@ -49,10 +66,155 @@ class ParseFlowDB {
         this.data.metadata.uploadHistory.push({
             fileName,
             recordCount: newRecords.length,
+            uniqueRecords: uniqueRecords.length,
+            duplicatesSkipped: duplicateInfo.length,
             timestamp
         });
 
-        return this.saveData();
+        console.log(`Import Summary for ${fileName}:`);
+        console.log(`- Total records processed: ${newRecords.length}`);
+        console.log(`- New records added: ${uniqueRecords.length}`);
+        console.log(`- Duplicates skipped: ${duplicateInfo.length}`);
+
+        const result = this.saveData();
+        
+        return {
+            ...result,
+            importStats: {
+                total: newRecords.length,
+                added: uniqueRecords.length,
+                duplicates: duplicateInfo.length,
+                duplicateDetails: duplicateInfo
+            }
+        };
+    }
+
+    findDuplicateRecord(newRecord) {
+        // Compare with all existing records
+        for (const existingRecord of this.data.records) {
+            if (this.recordsAreIdentical(newRecord, existingRecord)) {
+                return {
+                    _id: existingRecord._id,
+                    _source: existingRecord._source,
+                    _dateAdded: existingRecord._dateAdded
+                };
+            }
+        }
+        return null;
+    }
+
+    recordsAreIdentical(record1, record2) {
+        // Get all data keys (exclude metadata keys that start with _)
+        const keys1 = Object.keys(record1).filter(key => !key.startsWith('_'));
+        const keys2 = Object.keys(record2).filter(key => !key.startsWith('_'));
+        
+        // Check if they have the same number of data fields
+        if (keys1.length !== keys2.length) {
+            return false;
+        }
+        
+        // Get all unique keys from both records
+        const allKeys = [...new Set([...keys1, ...keys2])];
+        
+        // Compare each field value
+        for (const key of allKeys) {
+            const value1 = this.normalizeValue(record1[key]);
+            const value2 = this.normalizeValue(record2[key]);
+            
+            if (!this.valuesAreEqual(value1, value2)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    normalizeValue(value) {
+        // Handle null, undefined, empty string
+        if (value === null || value === undefined) {
+            return null;
+        }
+        
+        // Handle strings
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            // Treat empty strings, "null", "undefined" as null
+            if (trimmed === '' || 
+                trimmed.toLowerCase() === 'null' || 
+                trimmed.toLowerCase() === 'undefined' ||
+                trimmed.toLowerCase() === 'n/a' ||
+                trimmed === '-') {
+                return null;
+            }
+            return trimmed.toLowerCase(); // Case-insensitive comparison
+        }
+        
+        // Handle numbers (convert string numbers to actual numbers)
+        if (typeof value === 'number') {
+            return value;
+        }
+        
+        if (typeof value === 'string') {
+            const numValue = parseFloat(value);
+            if (!isNaN(numValue) && isFinite(numValue)) {
+                return numValue;
+            }
+        }
+        
+        // Handle booleans
+        if (typeof value === 'boolean') {
+            return value;
+        }
+        
+        // Handle string booleans
+        if (typeof value === 'string') {
+            const lower = value.toLowerCase();
+            if (lower === 'true' || lower === '1' || lower === 'yes') return true;
+            if (lower === 'false' || lower === '0' || lower === 'no') return false;
+        }
+        
+        // Handle dates
+        if (value instanceof Date) {
+            return value.toISOString();
+        }
+        
+        // Handle objects and arrays by deep comparison
+        if (typeof value === 'object') {
+            return JSON.stringify(this.sortObjectKeys(value));
+        }
+        
+        return value;
+    }
+
+    sortObjectKeys(obj) {
+        if (obj === null || typeof obj !== 'object') return obj;
+        
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.sortObjectKeys(item));
+        }
+        
+        const sorted = {};
+        Object.keys(obj).sort().forEach(key => {
+            sorted[key] = this.sortObjectKeys(obj[key]);
+        });
+        return sorted;
+    }
+
+    valuesAreEqual(value1, value2) {
+        // Both null/undefined
+        if ((value1 === null || value1 === undefined) && 
+            (value2 === null || value2 === undefined)) {
+            return true;
+        }
+        
+        // One is null, other is not
+        if ((value1 === null || value1 === undefined) !== 
+            (value2 === null || value2 === undefined)) {
+            return false;
+        }
+        
+        // Direct comparison
+        return value1 === value2;
     }
 
     generateId() {
@@ -1254,7 +1416,9 @@ async function processUpdateFiles(files) {
     showLoading();
     
     try {
+        let totalRecordsProcessed = 0;
         let totalRecordsAdded = 0;
+        let totalDuplicatesSkipped = 0;
         const importStats = [];
         
         for (const file of validFiles) {
@@ -1268,24 +1432,34 @@ async function processUpdateFiles(files) {
                 // Validate and clean data
                 const validatedData = validateAndCleanData(data, file.name);
                 
-                // Add to database
-                db.addRecords(validatedData, file.name);
-                totalRecordsAdded += validatedData.length;
+                // Add to database with duplicate checking
+                const addResult = db.addRecords(validatedData, file.name);
+                
+                totalRecordsProcessed += data.length;
+                totalRecordsAdded += addResult.importStats.added;
+                totalDuplicatesSkipped += addResult.importStats.duplicates;
                 
                 importStats.push({
                     fileName: file.name,
                     rawRecords: data.length,
                     validRecords: validatedData.length,
+                    addedRecords: addResult.importStats.added,
+                    duplicatesSkipped: addResult.importStats.duplicates,
                     processingTime,
-                    issues: data.length - validatedData.length
+                    issues: data.length - validatedData.length,
+                    duplicateDetails: addResult.importStats.duplicateDetails
                 });
                 
-                console.log(`Imported ${validatedData.length} records from ${file.name}`);
+                console.log(`Import completed for ${file.name}:`);
+                console.log(`- Added: ${addResult.importStats.added} records`);
+                console.log(`- Duplicates skipped: ${addResult.importStats.duplicates} records`);
             } else {
                 importStats.push({
                     fileName: file.name,
                     rawRecords: 0,
                     validRecords: 0,
+                    addedRecords: 0,
+                    duplicatesSkipped: 0,
                     processingTime,
                     issues: 1,
                     error: 'No data found in file'
@@ -1296,8 +1470,8 @@ async function processUpdateFiles(files) {
         closeUpdateModal();
         loadDashboardData();
         
-        // Show detailed import results
-        showImportResults(importStats, totalRecordsAdded);
+        // Show detailed import results with duplicate information
+        showImportResults(importStats, totalRecordsAdded, totalDuplicatesSkipped);
         
     } catch (error) {
         console.error('Error processing files:', error);
@@ -1356,7 +1530,7 @@ function validateAndCleanData(data, fileName) {
     return validatedData;
 }
 
-function showImportResults(importStats, totalRecordsAdded) {
+function showImportResults(importStats, totalRecordsAdded, totalDuplicatesSkipped = 0) {
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.innerHTML = `
@@ -1373,7 +1547,7 @@ function showImportResults(importStats, totalRecordsAdded) {
                         <i class="fas fa-check-circle"></i>
                         <div>
                             <h4>${totalRecordsAdded}</h4>
-                            <span>Total Records Added</span>
+                            <span>New Records Added</span>
                         </div>
                     </div>
                     <div class="summary-card info">
@@ -1384,10 +1558,17 @@ function showImportResults(importStats, totalRecordsAdded) {
                         </div>
                     </div>
                     <div class="summary-card warning">
+                        <i class="fas fa-copy"></i>
+                        <div>
+                            <h4>${totalDuplicatesSkipped}</h4>
+                            <span>Duplicates Skipped</span>
+                        </div>
+                    </div>
+                    <div class="summary-card warning">
                         <i class="fas fa-exclamation-triangle"></i>
                         <div>
-                            <h4>${importStats.reduce((sum, stat) => sum + stat.issues, 0)}</h4>
-                            <span>Issues Found</span>
+                            <h4>${importStats.reduce((sum, stat) => sum + (stat.issues || 0), 0)}</h4>
+                            <span>Data Issues</span>
                         </div>
                     </div>
                 </div>
@@ -1406,15 +1587,48 @@ function showImportResults(importStats, totalRecordsAdded) {
                                     ${stat.error ? 
                                         `<span class="error-message">${stat.error}</span>` :
                                         `
-                                        <span>✅ ${stat.validRecords} records imported</span>
-                                        ${stat.issues > 0 ? `<span>⚠️ ${stat.issues} issues skipped</span>` : ''}
+                                        <span>📊 ${stat.rawRecords} total records in file</span>
+                                        <span>✅ ${stat.addedRecords || stat.validRecords} new records added</span>
+                                        ${(stat.duplicatesSkipped || 0) > 0 ? 
+                                            `<span>🔄 ${stat.duplicatesSkipped} duplicates skipped</span>` : ''}
+                                        ${(stat.issues || 0) > 0 ? 
+                                            `<span>⚠️ ${stat.issues} invalid records skipped</span>` : ''}
                                         `
                                     }
                                 </div>
+                                ${stat.duplicateDetails && stat.duplicateDetails.length > 0 ? `
+                                    <div class="duplicate-info">
+                                        <details>
+                                            <summary>View Duplicate Details (${stat.duplicateDetails.length})</summary>
+                                            <div class="duplicate-list">
+                                                ${stat.duplicateDetails.slice(0, 5).map(dup => `
+                                                    <div class="duplicate-item">
+                                                        <small>Record matched existing data from: <strong>${dup.existingSource || 'Unknown'}</strong></small>
+                                                    </div>
+                                                `).join('')}
+                                                ${stat.duplicateDetails.length > 5 ? 
+                                                    `<div class="duplicate-item"><small>... and ${stat.duplicateDetails.length - 5} more</small></div>` : ''}
+                                            </div>
+                                        </details>
+                                    </div>
+                                ` : ''}
                             </div>
                         `).join('')}
                     </div>
                 </div>
+                
+                ${totalDuplicatesSkipped > 0 ? `
+                    <div class="duplicate-summary">
+                        <div class="info-box">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <strong>Duplicate Detection Active</strong>
+                                <p>ParseFlow automatically detects and skips identical records to prevent data duplication. 
+                                ${totalDuplicatesSkipped} duplicate records were found and skipped during this import.</p>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
             </div>
             <div class="modal-footer">
                 <button onclick="this.closest('.modal').remove()" class="close-btn">Close</button>

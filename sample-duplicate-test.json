@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "age": 30,
+    "city": "New York",
+    "salary": 50000
+  },
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "age": 25,
+    "city": "Los Angeles",
+    "salary": 55000
+  },
+  {
+    "id": 1,
+    "name": "John Doe",
+    "age": 30,
+    "city": "New York",
+    "salary": 50000
+  }
+]
