@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "age": 30,
+    "department": "Engineering",
+    "salary": 75000,
+    "city": "New York",
+    "experience": 5
+  },
+  {
+    "id": 2,
+    "name": "Jane Smith",
+    "age": 28,
+    "department": "Marketing",
+    "salary": 65000,
+    "city": "Los Angeles",
+    "experience": 3
+  },
+  {
+    "id": 3,
+    "name": "Mike Johnson",
+    "age": 35,
+    "department": "Engineering",
+    "salary": 85000,
+    "city": "San Francisco",
+    "experience": 8
+  },
+  {
+    "id": 4,
+    "name": "Sarah Wilson",
+    "age": 32,
+    "department": "HR",
+    "salary": 70000,
+    "city": "Chicago",
+    "experience": 6
+  },
+  {
+    "id": 5,
+    "name": "David Brown",
+    "age": 29,
+    "department": "Marketing",
+    "salary": 68000,
+    "city": "Boston",
+    "experience": 4
+  },
+  {
+    "id": 6,
+    "name": "Lisa Anderson",
+    "age": 31,
+    "department": "Finance",
+    "salary": 72000,
+    "city": "Seattle",
+    "experience": 7
+  },
+  {
+    "id": 7,
+    "name": "Chris Taylor",
+    "age": 27,
+    "department": "Engineering",
+    "salary": 78000,
+    "city": "Austin",
+    "experience": 3
+  },
+  {
+    "id": 8,
+    "name": "Emily Davis",
+    "age": 33,
+    "department": "Design",
+    "salary": 67000,
+    "city": "Portland",
+    "experience": 5
+  },
+  {
+    "id": 9,
+    "name": "Robert Miller",
+    "age": 36,
+    "department": "Engineering",
+    "salary": 90000,
+    "city": "Denver",
+    "experience": 10
+  },
+  {
+    "id": 10,
+    "name": "Amanda White",
+    "age": 26,
+    "department": "Marketing",
+    "salary": 62000,
+    "city": "Miami",
+    "experience": 2
+  }
+]

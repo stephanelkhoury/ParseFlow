@@ -1,0 +1,35 @@
+{
+  "name": "parseflow",
+  "version": "1.0.0",
+  "description": "A beautiful web application for importing, parsing, and visualizing JSON and Excel data",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 3000 -o",
+    "dev": "npx live-server --port=3000 --open=/",
+    "serve": "python3 -m http.server 3000"
+  },
+  "keywords": [
+    "data",
+    "parser",
+    "visualization",
+    "json",
+    "excel",
+    "chart",
+    "table",
+    "frontend"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stephanelkhoury/ParseFlow.git"
+  },
+  "homepage": "https://github.com/stephanelkhoury/ParseFlow#readme",
+  "engines": {
+    "node": ">=12.0.0"
+  }
+}

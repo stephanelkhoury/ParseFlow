@@ -1,0 +1,61 @@
+[
+  {
+    "employee_id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "department_name": "Engineering",
+    "salary_amount": 75000,
+    "hire_date": "2020-01-15",
+    "city_location": "New York"
+  },
+  {
+    "employee_id": 2,
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "department_name": "Marketing",
+    "salary_amount": 65000,
+    "city_location": "Los Angeles",
+    "years_experience": 3
+  },
+  {
+    "employee_id": 3,
+    "first_name": "Mike",
+    "last_name": "Johnson",
+    "department_name": "Engineering",
+    "salary_amount": 85000,
+    "hire_date": "2018-03-20",
+    "city_location": "San Francisco",
+    "bonus_amount": 5000
+  },
+  {
+    "employee_id": 4,
+    "first_name": "Sarah",
+    "last_name": "Wilson",
+    "department_name": "Human_Resources",
+    "salary_amount": 70000,
+    "city_location": "Chicago",
+    "years_experience": 6,
+    "certification_status": "Active"
+  },
+  {
+    "employee_id": 5,
+    "first_name": "David",
+    "last_name": "Brown",
+    "department_name": "Marketing",
+    "salary_amount": 68000,
+    "city_location": "Boston",
+    "bonus_amount": 3000,
+    "project_count": 12
+  },
+  {
+    "employee_id": 6,
+    "first_name": "Lisa",
+    "last_name": "Anderson",
+    "department_name": "Finance_Department",
+    "salary_amount": 72000,
+    "hire_date": "2019-07-10",
+    "city_location": "Seattle",
+    "years_experience": 7,
+    "performance_rating": "Excellent"
+  }
+]
