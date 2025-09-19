@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParseFlow - Premium Design Showcase</title>
+    
+    <!-- Load Premium Color System -->
+    <link rel="stylesheet" href="premium-colors.css">
+    <link rel="stylesheet" href="mvc-styles.css">
+    <link rel="stylesheet" href="mvc-utilities.css">
+    
+    <style>
+        /* Theme Selector Styles */
+        .theme-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 1rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            border: 1px solid var(--gray-200);
+        }
+        
+        .theme-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .theme-option:hover {
+            background: var(--gray-100);
+        }
+        
+        .theme-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .demo-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            margin: 1rem 0;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--gray-200);
+        }
+        
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .color-swatch {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body class="theme-blue">
+    <!-- Theme Selector -->
+    <div class="theme-selector">
+        <h4 style="margin: 0 0 1rem 0; color: var(--gray-800);">Choose Theme</h4>
+        <div class="theme-option" onclick="setTheme('blue')">
+            <div class="theme-color" style="background: #2563eb;"></div>
+            <span>Modern Blue</span>
+        </div>
+        <div class="theme-option" onclick="setTheme('purple')">
+            <div class="theme-color" style="background: #9333ea;"></div>
+            <span>Elegant Purple</span>
+        </div>
+        <div class="theme-option" onclick="setTheme('teal')">
+            <div class="theme-color" style="background: #0d9488;"></div>
+            <span>Sophisticated Teal</span>
+        </div>
+        <div class="theme-option" onclick="setTheme('orange')">
+            <div class="theme-color" style="background: #ea580c;"></div>
+            <span>Warm Orange</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="section-header">
+            <h1>🎨 ParseFlow Premium Design</h1>
+            <p>Experience beautiful, modern color schemes with professional typography and interactions</p>
+        </div>
+
+        <!-- Navigation Demo -->
+        <div class="demo-card">
+            <h2 style="color: var(--gray-900); margin-bottom: 1.5rem;">Premium Navigation</h2>
+            <div style="background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-dark)); padding: 1.5rem; border-radius: 15px;">
+                <div class="nav-menu">
+                    <button class="nav-item active">Dashboard</button>
+                    <button class="nav-item">Parser Selection</button>
+                    <button class="nav-item">Data Grid</button>
+                    <button class="nav-item">Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Button Showcase -->
+        <div class="demo-card">
+            <h2 style="color: var(--gray-900); margin-bottom: 1.5rem;">Premium Buttons</h2>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn">Primary Button</button>
+                <button class="btn-glass">Glass Button</button>
+                <button class="btn-modern">Modern Button</button>
+            </div>
+        </div>
+
+        <!-- Card Designs -->
+        <div class="demo-card">
+            <h2 style="color: var(--gray-900); margin-bottom: 1.5rem;">Premium Cards</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <div class="card-premium">
+                    <h3 class="text-gradient">Premium Card</h3>
+                    <p style="color: var(--gray-600);">Beautiful elevated design with hover effects</p>
+                </div>
+                <div class="card-gradient">
+                    <h3 style="color: var(--theme-primary);">Gradient Card</h3>
+                    <p style="color: var(--gray-600);">Subtle gradient with colored top border</p>
+                </div>
+                <div class="glass">
+                    <h3 style="color: var(--gray-800);">Glass Card</h3>
+                    <p style="color: var(--gray-600);">Modern glassmorphism effect</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Color Palette Display -->
+        <div class="demo-card">
+            <h2 style="color: var(--gray-900); margin-bottom: 1.5rem;">Current Color Palette</h2>
+            <div class="color-palette">
+                <div class="color-swatch" style="background: var(--theme-primary);">Primary</div>
+                <div class="color-swatch" style="background: var(--theme-accent);">Accent</div>
+                <div class="color-swatch" style="background: var(--theme-primary-dark);">Dark</div>
+                <div class="color-swatch" style="background: var(--success);">Success</div>
+                <div class="color-swatch" style="background: var(--warning); color: black;">Warning</div>
+                <div class="color-swatch" style="background: var(--error);">Error</div>
+            </div>
+        </div>
+
+        <!-- Text Styles -->
+        <div class="demo-card">
+            <h2 style="color: var(--gray-900); margin-bottom: 1.5rem;">Typography Showcase</h2>
+            <h1 class="text-gradient">Gradient Heading</h1>
+            <h2 class="text-primary">Primary Color Heading</h2>
+            <p class="text-gray">Regular paragraph text with perfect readability</p>
+            <p class="text-gray-light">Muted text for secondary information</p>
+            <div class="neon-text" style="font-size: 1.5rem; font-weight: bold;">Neon Glow Effect</div>
+        </div>
+
+        <!-- Special Effects -->
+        <div class="demo-card">
+            <h2 style="color: var(--gray-900); margin-bottom: 1.5rem;">Special Effects</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                <div class="animated-gradient" style="padding: 2rem; border-radius: 15px; text-align: center; color: white;">
+                    <h3>Animated Gradient</h3>
+                    <p>Beautiful shifting colors</p>
+                </div>
+                <div class="neon-glow" style="padding: 2rem; border-radius: 15px; text-align: center; background: var(--theme-primary); color: white;">
+                    <h3>Neon Glow Effect</h3>
+                    <p>Glowing border animation</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setTheme(theme) {
+            // Remove existing theme classes
+            document.body.classList.remove('theme-blue', 'theme-purple', 'theme-teal', 'theme-orange');
+            
+            // Add new theme class
+            document.body.classList.add(`theme-${theme}`);
+            
+            // Store preference
+            localStorage.setItem('preferred-theme', theme);
+            
+            // Add visual feedback
+            const options = document.querySelectorAll('.theme-option');
+            options.forEach(option => {
+                option.style.background = '';
+            });
+            
+            event.target.closest('.theme-option').style.background = 'var(--gray-100)';
+            
+            setTimeout(() => {
+                event.target.closest('.theme-option').style.background = '';
+            }, 200);
+        }
+        
+        // Load saved theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('preferred-theme') || 'blue';
+            setTheme(savedTheme);
+        });
+    </script>
+</body>
+</html>

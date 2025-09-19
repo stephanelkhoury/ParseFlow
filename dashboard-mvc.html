@@ -10,13 +10,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     
-    <!-- Styles -->
+    <!-- Premium Design System -->
+    <link rel="stylesheet" href="premium-colors.css">
     <link rel="stylesheet" href="dashboard-styles.css">
     <link rel="stylesheet" href="mvc-styles.css">
+    <link rel="stylesheet" href="mvc-utilities.css">
+    
+    <!-- Theme Management -->
+    <script src="theme-manager.js"></script>
 </head>
-<body>
+<body class="theme-blue">
     <!-- Navigation Header -->
-    <nav class="navbar">
+    <nav class="navbar" style="background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-dark));">
         <div class="nav-container">
             <div class="nav-brand">
                 <i class="fas fa-chart-line"></i>
@@ -237,6 +242,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="mvc-init.js"></script>
     <script type="module">
         import ParseFlowApp from './src/ParseFlowApp.js';
 

@@ -34,14 +34,14 @@ body {
 .nav-brand {
     display: flex;
     align-items: center;
-    color: white;
+    color: #1e40af;
     font-size: 1.5rem;
     font-weight: 700;
 }
 
 .nav-brand i {
     margin-right: 0.5rem;
-    color: #00d4ff;
+    color: #2563eb;
 }
 
 .nav-menu {
@@ -63,8 +63,8 @@ body {
 
 .nav-link:hover,
 .nav-link.active {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: rgba(37, 99, 235, 0.2);
+    color: #1e40af;
     transform: translateY(-2px);
 }
 
@@ -75,8 +75,8 @@ body {
 
 .export-btn,
 .clear-btn {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: rgba(37, 99, 235, 0.2);
+    color: #1e40af;
     border: none;
     padding: 8px 16px;
     border-radius: 20px;
