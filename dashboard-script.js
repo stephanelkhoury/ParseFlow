@@ -525,10 +525,11 @@ function displayTable(data) {
     columnCount.textContent = `${headers.length} columns`;
 }
 
-// Chart functions
+// Chart functions with enhanced intelligence
 function loadChartControls() {
     const records = db.getAllRecords();
     updateChartControls(records);
+    generateSmartChartSuggestions(records);
 }
 
 function updateChartControls(data) {
@@ -541,20 +542,235 @@ function updateChartControls(data) {
     if (data.length === 0) return;
     
     const headers = getAllHeaders(data);
+    const fieldAnalysis = analyzeFields(data, headers);
+    
+    // Sort headers by data type for better UX
+    const categoricalFields = fieldAnalysis.categorical;
+    const numericFields = fieldAnalysis.numeric;
+    const dateFields = fieldAnalysis.dates;
+    
+    // Add categorical fields (good for X-axis)
+    if (categoricalFields.length > 0) {
+        const catGroup = document.createElement('optgroup');
+        catGroup.label = 'Categorical Fields';
+        categoricalFields.forEach(header => {
+            const option = document.createElement('option');
+            option.value = header;
+            option.textContent = `${formatFieldName(header)} (text)`;
+            catGroup.appendChild(option);
+        });
+        xAxis.appendChild(catGroup);
+    }
+    
+    // Add date fields (good for X-axis)
+    if (dateFields.length > 0) {
+        const dateGroup = document.createElement('optgroup');
+        dateGroup.label = 'Date Fields';
+        dateFields.forEach(header => {
+            const option = document.createElement('option');
+            option.value = header;
+            option.textContent = `${formatFieldName(header)} (date)`;
+            dateGroup.appendChild(option);
+        });
+        xAxis.appendChild(dateGroup);
+    }
+    
+    // Add numeric fields (good for both axes)
+    if (numericFields.length > 0) {
+        const numGroup = document.createElement('optgroup');
+        numGroup.label = 'Numeric Fields';
+        numericFields.forEach(header => {
+            const optionX = document.createElement('option');
+            optionX.value = header;
+            optionX.textContent = `${formatFieldName(header)} (number)`;
+            numGroup.appendChild(optionX);
+        });
+        xAxis.appendChild(numGroup.cloneNode(true));
+        yAxis.appendChild(numGroup);
+    }
+    
+    // Add all categorical fields to Y-axis for counting
+    if (categoricalFields.length > 0) {
+        const catGroupY = document.createElement('optgroup');
+        catGroupY.label = 'Categorical Fields (for counting)';
+        categoricalFields.forEach(header => {
+            const option = document.createElement('option');
+            option.value = header;
+            option.textContent = `${formatFieldName(header)} (count)`;
+            catGroupY.appendChild(option);
+        });
+        yAxis.appendChild(catGroupY);
+    }
+}
+
+function analyzeFields(data, headers) {
+    const analysis = {
+        numeric: [],
+        categorical: [],
+        dates: [],
+        fieldStats: {}
+    };
     
     headers.forEach(header => {
-        const formattedName = formatFieldName(header);
+        const values = data.map(row => row[header]).filter(val => val !== null && val !== undefined && val !== '');
         
-        const optionX = document.createElement('option');
-        optionX.value = header;
-        optionX.textContent = formattedName;
-        xAxis.appendChild(optionX);
+        if (values.length === 0) return;
         
-        const optionY = document.createElement('option');
-        optionY.value = header;
-        optionY.textContent = formattedName;
-        yAxis.appendChild(optionY);
+        let numericCount = 0;
+        let dateCount = 0;
+        const uniqueValues = new Set();
+        
+        values.forEach(val => {
+            uniqueValues.add(val);
+            
+            // Check if numeric
+            const numVal = parseFloat(val);
+            if (!isNaN(numVal) && isFinite(numVal)) {
+                numericCount++;
+            }
+            
+            // Check if date
+            const dateVal = new Date(val);
+            if (!isNaN(dateVal.getTime()) && val.toString().match(/\d{4}|\d{2}[\/\-]\d{2}|\d{2}[\/\-]\d{4}/)) {
+                dateCount++;
+            }
+        });
+        
+        const numericRatio = numericCount / values.length;
+        const dateRatio = dateCount / values.length;
+        const uniqueRatio = uniqueValues.size / values.length;
+        
+        analysis.fieldStats[header] = {
+            totalValues: values.length,
+            uniqueValues: uniqueValues.size,
+            numericRatio,
+            dateRatio,
+            uniqueRatio
+        };
+        
+        // Classify field type
+        if (numericRatio > 0.8) {
+            analysis.numeric.push(header);
+        } else if (dateRatio > 0.6) {
+            analysis.dates.push(header);
+        } else {
+            analysis.categorical.push(header);
+        }
     });
+    
+    return analysis;
+}
+
+function generateSmartChartSuggestions(data) {
+    if (data.length === 0) return;
+    
+    const headers = getAllHeaders(data);
+    const fieldAnalysis = analyzeFields(data, headers);
+    
+    // Create suggestions container
+    let suggestionsContainer = document.getElementById('chartSuggestions');
+    if (!suggestionsContainer) {
+        suggestionsContainer = document.createElement('div');
+        suggestionsContainer.id = 'chartSuggestions';
+        suggestionsContainer.className = 'chart-suggestions';
+        
+        const chartsSection = document.getElementById('charts-section');
+        const chartControls = chartsSection.querySelector('.chart-controls');
+        chartControls.parentNode.insertBefore(suggestionsContainer, chartControls.nextSibling);
+    }
+    
+    const suggestions = generateChartSuggestions(fieldAnalysis);
+    
+    suggestionsContainer.innerHTML = `
+        <h3><i class="fas fa-lightbulb"></i> Smart Chart Suggestions</h3>
+        <div class="suggestions-grid">
+            ${suggestions.map(suggestion => `
+                <div class="suggestion-card" onclick="applySuggestion('${suggestion.x}', '${suggestion.y}', '${suggestion.type}')">
+                    <div class="suggestion-icon">
+                        <i class="fas ${getChartIcon(suggestion.type)}"></i>
+                    </div>
+                    <div class="suggestion-content">
+                        <h4>${suggestion.title}</h4>
+                        <p>${suggestion.description}</p>
+                        <small>${formatFieldName(suggestion.y)} by ${formatFieldName(suggestion.x)}</small>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function generateChartSuggestions(analysis) {
+    const suggestions = [];
+    
+    // Distribution charts for categorical data
+    analysis.categorical.forEach(catField => {
+        suggestions.push({
+            type: 'pie',
+            x: catField,
+            y: catField,
+            title: `${formatFieldName(catField)} Distribution`,
+            description: 'See the breakdown of categories'
+        });
+    });
+    
+    // Numeric comparisons
+    if (analysis.categorical.length > 0 && analysis.numeric.length > 0) {
+        const catField = analysis.categorical[0];
+        const numField = analysis.numeric[0];
+        
+        suggestions.push({
+            type: 'bar',
+            x: catField,
+            y: numField,
+            title: `${formatFieldName(numField)} by ${formatFieldName(catField)}`,
+            description: 'Compare numeric values across categories'
+        });
+    }
+    
+    // Time series if dates available
+    if (analysis.dates.length > 0 && analysis.numeric.length > 0) {
+        const dateField = analysis.dates[0];
+        const numField = analysis.numeric[0];
+        
+        suggestions.push({
+            type: 'line',
+            x: dateField,
+            y: numField,
+            title: `${formatFieldName(numField)} Over Time`,
+            description: 'Track changes over time'
+        });
+    }
+    
+    // Numeric correlations
+    if (analysis.numeric.length >= 2) {
+        suggestions.push({
+            type: 'bar',
+            x: analysis.numeric[0],
+            y: analysis.numeric[1],
+            title: `${formatFieldName(analysis.numeric[1])} vs ${formatFieldName(analysis.numeric[0])}`,
+            description: 'Compare two numeric variables'
+        });
+    }
+    
+    return suggestions.slice(0, 4); // Limit to 4 suggestions
+}
+
+function getChartIcon(type) {
+    const icons = {
+        bar: 'fa-chart-bar',
+        line: 'fa-chart-line',
+        pie: 'fa-chart-pie',
+        doughnut: 'fa-chart-pie'
+    };
+    return icons[type] || 'fa-chart-bar';
+}
+
+function applySuggestion(xField, yField, chartType) {
+    document.getElementById('xAxis').value = xField;
+    document.getElementById('yAxis').value = yField;
+    document.getElementById('chartType').value = chartType;
+    updateChart();
 }
 
 function updateChart() {
@@ -573,74 +789,324 @@ function updateChart() {
         currentChart.destroy();
     }
     
-    // Prepare data
-    const labels = [];
-    const chartData = [];
-    
-    if (chartType === 'pie' || chartType === 'doughnut') {
-        const groups = {};
-        data.forEach(row => {
-            const key = row[xAxis] || 'Unknown';
-            const value = parseFloat(row[yAxis]) || 0;
-            groups[key] = (groups[key] || 0) + value;
-        });
-        
-        Object.entries(groups).forEach(([key, value]) => {
-            labels.push(key);
-            chartData.push(value);
-        });
-    } else {
-        const limitedData = data.slice(0, 50);
-        limitedData.forEach(row => {
-            labels.push(row[xAxis] || 'Unknown');
-            chartData.push(parseFloat(row[yAxis]) || 0);
-        });
-    }
+    // Intelligent data preparation
+    const chartData = prepareSmartChartData(data, xAxis, yAxis, chartType);
     
     const config = {
         type: chartType,
-        data: {
-            labels: labels,
-            datasets: [{
-                label: formatFieldName(yAxis),
-                data: chartData,
-                backgroundColor: generateColors(chartData.length),
-                borderColor: '#667eea',
-                borderWidth: 2,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: chartType === 'pie' || chartType === 'doughnut' ? 'right' : 'top'
-                },
-                title: {
-                    display: true,
-                    text: `${formatFieldName(yAxis)} by ${formatFieldName(xAxis)}`
-                }
-            },
-            scales: chartType === 'pie' || chartType === 'doughnut' ? {} : {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: formatFieldName(yAxis)
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: formatFieldName(xAxis)
-                    }
-                }
-            }
-        }
+        data: chartData,
+        options: getSmartChartOptions(chartType, xAxis, yAxis, chartData)
     };
     
     currentChart = new Chart(ctx, config);
+    
+    // Show chart insights
+    displayChartInsights(data, xAxis, yAxis, chartData);
+}
+
+function prepareSmartChartData(data, xField, yField, chartType) {
+    const fieldAnalysis = analyzeFields(data, [xField, yField]);
+    const isXNumeric = fieldAnalysis.numeric.includes(xField);
+    const isYNumeric = fieldAnalysis.numeric.includes(yField);
+    const isXDate = fieldAnalysis.dates.includes(xField);
+    
+    let labels = [];
+    let chartData = [];
+    let backgroundColors = [];
+    
+    if (chartType === 'pie' || chartType === 'doughnut') {
+        // For pie charts, count occurrences or sum values
+        const groups = {};
+        
+        data.forEach(row => {
+            const key = row[xField] || 'Unknown';
+            if (isYNumeric && xField !== yField) {
+                // Sum numeric values
+                const value = parseFloat(row[yField]) || 0;
+                groups[key] = (groups[key] || 0) + value;
+            } else {
+                // Count occurrences
+                groups[key] = (groups[key] || 0) + 1;
+            }
+        });
+        
+        // Sort by value descending and take top 10
+        const sortedEntries = Object.entries(groups)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 10);
+        
+        labels = sortedEntries.map(([key]) => key);
+        chartData = sortedEntries.map(([,value]) => value);
+        backgroundColors = generateColors(chartData.length);
+        
+    } else {
+        // For other charts
+        let processedData = [...data];
+        
+        // Sort data intelligently
+        if (isXDate) {
+            processedData.sort((a, b) => new Date(a[xField] || 0) - new Date(b[xField] || 0));
+        } else if (isXNumeric) {
+            processedData.sort((a, b) => parseFloat(a[xField] || 0) - parseFloat(b[xField] || 0));
+        } else {
+            processedData.sort((a, b) => (a[xField] || '').toString().localeCompare((b[xField] || '').toString()));
+        }
+        
+        // Limit data points for performance and readability
+        const maxPoints = chartType === 'line' ? 100 : 50;
+        processedData = processedData.slice(0, maxPoints);
+        
+        if (isYNumeric && xField !== yField) {
+            // Numeric Y-axis
+            processedData.forEach(row => {
+                labels.push(formatAxisValue(row[xField], isXDate));
+                chartData.push(parseFloat(row[yField]) || 0);
+            });
+        } else {
+            // Count occurrences for categorical Y-axis
+            const groups = {};
+            processedData.forEach(row => {
+                const key = formatAxisValue(row[xField], isXDate);
+                groups[key] = (groups[key] || 0) + 1;
+            });
+            
+            labels = Object.keys(groups);
+            chartData = Object.values(groups);
+        }
+        
+        backgroundColors = chartType === 'line' ? 
+            ['rgba(102, 126, 234, 0.8)'] : 
+            generateColors(chartData.length);
+    }
+    
+    return {
+        labels: labels,
+        datasets: [{
+            label: xField === yField ? `Count of ${formatFieldName(yField)}` : formatFieldName(yField),
+            data: chartData,
+            backgroundColor: backgroundColors,
+            borderColor: chartType === 'line' ? '#667eea' : backgroundColors,
+            borderWidth: chartType === 'line' ? 3 : 2,
+            tension: chartType === 'line' ? 0.4 : 0,
+            fill: chartType === 'line' ? false : true,
+            pointBackgroundColor: chartType === 'line' ? '#667eea' : undefined,
+            pointBorderColor: chartType === 'line' ? '#ffffff' : undefined,
+            pointBorderWidth: chartType === 'line' ? 2 : undefined,
+            pointRadius: chartType === 'line' ? 5 : undefined
+        }]
+    };
+}
+
+function formatAxisValue(value, isDate) {
+    if (!value) return 'Unknown';
+    
+    if (isDate) {
+        const date = new Date(value);
+        return date.toLocaleDateString();
+    }
+    
+    return value.toString();
+}
+
+function getSmartChartOptions(chartType, xField, yField, chartData) {
+    const fieldAnalysis = analyzeFields(db.getAllRecords(), [xField, yField]);
+    const isYNumeric = fieldAnalysis.numeric.includes(yField);
+    
+    const baseOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: chartType === 'pie' || chartType === 'doughnut' ? 'right' : 'top',
+                labels: {
+                    usePointStyle: true,
+                    padding: 20
+                }
+            },
+            title: {
+                display: true,
+                text: xField === yField ? 
+                    `Distribution of ${formatFieldName(yField)}` :
+                    `${formatFieldName(yField)} by ${formatFieldName(xField)}`,
+                font: {
+                    size: 16,
+                    weight: 'bold'
+                },
+                padding: 20
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: 'white',
+                bodyColor: 'white',
+                borderColor: '#667eea',
+                borderWidth: 1,
+                cornerRadius: 8,
+                displayColors: true,
+                callbacks: {
+                    label: function(context) {
+                        const value = context.parsed.y || context.parsed;
+                        if (isYNumeric) {
+                            return `${context.dataset.label}: ${value.toLocaleString()}`;
+                        } else {
+                            return `${context.dataset.label}: ${value} items`;
+                        }
+                    }
+                }
+            }
+        },
+        interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+        },
+        animation: {
+            duration: 1000,
+            easing: 'easeInOutQuart'
+        }
+    };
+    
+    if (chartType !== 'pie' && chartType !== 'doughnut') {
+        baseOptions.scales = {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: xField === yField ? 'Count' : formatFieldName(yField),
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                },
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.1)'
+                },
+                ticks: {
+                    callback: function(value) {
+                        if (isYNumeric) {
+                            return value.toLocaleString();
+                        }
+                        return value;
+                    }
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: formatFieldName(xField),
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                },
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.1)'
+                },
+                ticks: {
+                    maxRotation: 45,
+                    minRotation: 0
+                }
+            }
+        };
+    }
+    
+    return baseOptions;
+}
+
+function displayChartInsights(data, xField, yField, chartData) {
+    let insightsContainer = document.getElementById('chartInsights');
+    if (!insightsContainer) {
+        insightsContainer = document.createElement('div');
+        insightsContainer.id = 'chartInsights';
+        insightsContainer.className = 'chart-insights';
+        
+        const chartContainer = document.querySelector('.chart-container');
+        chartContainer.parentNode.insertBefore(insightsContainer, chartContainer.nextSibling);
+    }
+    
+    const insights = generateInsights(data, xField, yField, chartData);
+    
+    insightsContainer.innerHTML = `
+        <h4><i class="fas fa-brain"></i> Chart Insights</h4>
+        <div class="insights-list">
+            ${insights.map(insight => `
+                <div class="insight-item">
+                    <i class="fas ${insight.icon}"></i>
+                    <span>${insight.text}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function generateInsights(data, xField, yField, chartData) {
+    const insights = [];
+    const values = chartData.datasets[0].data;
+    
+    if (values.length === 0) return insights;
+    
+    const sum = values.reduce((a, b) => a + b, 0);
+    const avg = sum / values.length;
+    const max = Math.max(...values);
+    const min = Math.min(...values);
+    const maxIndex = values.indexOf(max);
+    const minIndex = values.indexOf(min);
+    
+    // Total insights
+    insights.push({
+        icon: 'fa-calculator',
+        text: `Total records analyzed: ${data.length.toLocaleString()}`
+    });
+    
+    if (xField === yField) {
+        // Distribution insights
+        insights.push({
+            icon: 'fa-chart-pie',
+            text: `Most common value: "${chartData.labels[maxIndex]}" (${max} occurrences)`
+        });
+        
+        if (values.length > 1) {
+            insights.push({
+                icon: 'fa-chart-pie',
+                text: `Least common value: "${chartData.labels[minIndex]}" (${min} occurrences)`
+            });
+        }
+    } else {
+        // Comparison insights
+        const fieldAnalysis = analyzeFields(data, [yField]);
+        const isYNumeric = fieldAnalysis.numeric.includes(yField);
+        
+        if (isYNumeric) {
+            insights.push({
+                icon: 'fa-arrow-up',
+                text: `Highest ${formatFieldName(yField)}: ${max.toLocaleString()} (${chartData.labels[maxIndex]})`
+            });
+            
+            insights.push({
+                icon: 'fa-arrow-down',
+                text: `Lowest ${formatFieldName(yField)}: ${min.toLocaleString()} (${chartData.labels[minIndex]})`
+            });
+            
+            insights.push({
+                icon: 'fa-balance-scale',
+                text: `Average ${formatFieldName(yField)}: ${avg.toLocaleString(undefined, {maximumFractionDigits: 2})}`
+            });
+        }
+    }
+    
+    // Data quality insights
+    const missingX = data.filter(row => !row[xField] || row[xField] === '').length;
+    const missingY = data.filter(row => !row[yField] || row[yField] === '').length;
+    
+    if (missingX > 0 || missingY > 0) {
+        insights.push({
+            icon: 'fa-exclamation-triangle',
+            text: `Missing data: ${missingX} records missing ${formatFieldName(xField)}, ${missingY} missing ${formatFieldName(yField)}`
+        });
+    }
+    
+    return insights;
 }
 
 function generateColors(count) {
@@ -788,21 +1254,184 @@ async function processUpdateFiles(files) {
     showLoading();
     
     try {
+        let totalRecordsAdded = 0;
+        const importStats = [];
+        
         for (const file of validFiles) {
+            console.log(`Processing file: ${file.name}`);
+            const startTime = Date.now();
+            
             const data = await parseFile(file);
+            const processingTime = Date.now() - startTime;
+            
             if (data && data.length > 0) {
-                db.addRecords(data, file.name);
+                // Validate and clean data
+                const validatedData = validateAndCleanData(data, file.name);
+                
+                // Add to database
+                db.addRecords(validatedData, file.name);
+                totalRecordsAdded += validatedData.length;
+                
+                importStats.push({
+                    fileName: file.name,
+                    rawRecords: data.length,
+                    validRecords: validatedData.length,
+                    processingTime,
+                    issues: data.length - validatedData.length
+                });
+                
+                console.log(`Imported ${validatedData.length} records from ${file.name}`);
+            } else {
+                importStats.push({
+                    fileName: file.name,
+                    rawRecords: 0,
+                    validRecords: 0,
+                    processingTime,
+                    issues: 1,
+                    error: 'No data found in file'
+                });
             }
         }
         
         closeUpdateModal();
         loadDashboardData();
-        showNotification(`Successfully added ${validFiles.length} file(s) to database!`, 'success');
+        
+        // Show detailed import results
+        showImportResults(importStats, totalRecordsAdded);
+        
     } catch (error) {
         console.error('Error processing files:', error);
         showNotification('Error processing files: ' + error.message, 'error');
     } finally {
         hideLoading();
+    }
+}
+
+function validateAndCleanData(data, fileName) {
+    const validatedData = [];
+    const issues = [];
+    
+    data.forEach((record, index) => {
+        if (!record || typeof record !== 'object') {
+            issues.push(`Row ${index + 1}: Invalid record format`);
+            return;
+        }
+        
+        // Clean empty string fields
+        const cleanedRecord = {};
+        let hasValidData = false;
+        
+        Object.entries(record).forEach(([key, value]) => {
+            if (key && key.trim() !== '') {
+                // Clean the value
+                let cleanValue = value;
+                
+                if (typeof value === 'string') {
+                    cleanValue = value.trim();
+                    if (cleanValue === '' || cleanValue.toLowerCase() === 'null' || cleanValue.toLowerCase() === 'undefined') {
+                        cleanValue = null;
+                    }
+                }
+                
+                cleanedRecord[key.trim()] = cleanValue;
+                
+                if (cleanValue !== null && cleanValue !== undefined && cleanValue !== '') {
+                    hasValidData = true;
+                }
+            }
+        });
+        
+        // Only include records with at least some valid data
+        if (hasValidData) {
+            validatedData.push(cleanedRecord);
+        } else {
+            issues.push(`Row ${index + 1}: No valid data found`);
+        }
+    });
+    
+    if (issues.length > 0) {
+        console.warn(`Data validation issues in ${fileName}:`, issues.slice(0, 10)); // Log first 10 issues
+    }
+    
+    return validatedData;
+}
+
+function showImportResults(importStats, totalRecordsAdded) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content import-results-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-file-import"></i> Import Results</h3>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="import-summary">
+                    <div class="summary-card success">
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <h4>${totalRecordsAdded}</h4>
+                            <span>Total Records Added</span>
+                        </div>
+                    </div>
+                    <div class="summary-card info">
+                        <i class="fas fa-file"></i>
+                        <div>
+                            <h4>${importStats.length}</h4>
+                            <span>Files Processed</span>
+                        </div>
+                    </div>
+                    <div class="summary-card warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <h4>${importStats.reduce((sum, stat) => sum + stat.issues, 0)}</h4>
+                            <span>Issues Found</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="import-details">
+                    <h4>File Details</h4>
+                    <div class="file-results">
+                        ${importStats.map(stat => `
+                            <div class="file-result ${stat.error ? 'error' : 'success'}">
+                                <div class="file-result-header">
+                                    <i class="fas ${stat.error ? 'fa-times-circle' : 'fa-check-circle'}"></i>
+                                    <span class="file-name">${stat.fileName}</span>
+                                    <span class="processing-time">${stat.processingTime}ms</span>
+                                </div>
+                                <div class="file-result-details">
+                                    ${stat.error ? 
+                                        `<span class="error-message">${stat.error}</span>` :
+                                        `
+                                        <span>✅ ${stat.validRecords} records imported</span>
+                                        ${stat.issues > 0 ? `<span>⚠️ ${stat.issues} issues skipped</span>` : ''}
+                                        `
+                                    }
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="this.closest('.modal').remove()" class="close-btn">Close</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    modal.style.display = 'flex';
+    
+    // Auto-close successful imports after 5 seconds
+    if (totalRecordsAdded > 0 && importStats.every(stat => !stat.error)) {
+        setTimeout(() => {
+            if (modal.parentElement) {
+                modal.remove();
+            }
+        }, 5000);
     }
 }
 
@@ -826,26 +1455,66 @@ function parseJSONFile(file) {
                 const jsonData = JSON.parse(e.target.result);
                 let data = [];
                 
+                console.log('JSON file structure:', jsonData);
+                
                 if (Array.isArray(jsonData)) {
+                    // Direct array of objects
                     data = jsonData;
-                } else if (typeof jsonData === 'object') {
+                } else if (typeof jsonData === 'object' && jsonData !== null) {
+                    // Object containing data - search for arrays
                     const keys = Object.keys(jsonData);
-                    const arrayKey = keys.find(key => Array.isArray(jsonData[key]));
                     
-                    if (arrayKey) {
-                        data = jsonData[arrayKey];
+                    // Look for arrays in the object
+                    const arrayKeys = keys.filter(key => Array.isArray(jsonData[key]));
+                    
+                    if (arrayKeys.length > 0) {
+                        // Use the largest array
+                        const largestArrayKey = arrayKeys.reduce((prev, curr) => 
+                            jsonData[curr].length > jsonData[prev].length ? curr : prev
+                        );
+                        data = jsonData[largestArrayKey];
+                        console.log(`Using array from key "${largestArrayKey}" with ${data.length} records`);
                     } else {
-                        data = [jsonData];
+                        // Look for nested objects that might contain arrays
+                        let foundData = false;
+                        for (const key of keys) {
+                            if (typeof jsonData[key] === 'object' && jsonData[key] !== null) {
+                                const nestedKeys = Object.keys(jsonData[key]);
+                                const nestedArrayKeys = nestedKeys.filter(nKey => Array.isArray(jsonData[key][nKey]));
+                                
+                                if (nestedArrayKeys.length > 0) {
+                                    const largestNestedKey = nestedArrayKeys.reduce((prev, curr) => 
+                                        jsonData[key][curr].length > jsonData[key][prev].length ? curr : prev
+                                    );
+                                    data = jsonData[key][largestNestedKey];
+                                    console.log(`Using nested array from "${key}.${largestNestedKey}" with ${data.length} records`);
+                                    foundData = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (!foundData) {
+                            // Convert single object to array
+                            data = [jsonData];
+                            console.log('Converting single object to array');
+                        }
                     }
                 }
                 
+                // Ensure all data items are objects
+                data = data.filter(item => typeof item === 'object' && item !== null);
+                
+                console.log(`Successfully parsed ${data.length} records from JSON file`);
                 resolve(data);
+                
             } catch (error) {
-                reject(new Error('Invalid JSON format'));
+                console.error('JSON parsing error:', error);
+                reject(new Error('Invalid JSON format: ' + error.message));
             }
         };
         reader.onerror = () => reject(new Error('Error reading file'));
-        reader.readAsText(file);
+        reader.readAsText(file, 'utf-8'); // Explicitly specify UTF-8 encoding
     });
 }
 
@@ -855,35 +1524,80 @@ function parseExcelFile(file) {
         reader.onload = function(e) {
             try {
                 const arrayBuffer = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                
-                const worksheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[worksheetName];
-                
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                
-                if (jsonData.length === 0) {
-                    resolve([]);
-                    return;
-                }
-                
-                const headers = jsonData[0];
-                const rows = jsonData.slice(1);
-                
-                const parsedData = rows.map(row => {
-                    const obj = {};
-                    headers.forEach((header, index) => {
-                        obj[header] = row[index] || '';
-                    });
-                    return obj;
+                const workbook = XLSX.read(arrayBuffer, { 
+                    type: 'array',
+                    cellDates: true,
+                    cellNF: false,
+                    cellText: false
                 });
                 
-                resolve(parsedData);
+                console.log('Excel workbook sheets:', workbook.SheetNames);
+                
+                let allData = [];
+                
+                // Process all sheets, not just the first one
+                workbook.SheetNames.forEach((sheetName, index) => {
+                    const worksheet = workbook.Sheets[sheetName];
+                    
+                    // Convert to JSON with various options to capture all data
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+                        header: 1,
+                        defval: '', // Default value for empty cells
+                        blankrows: false, // Skip completely blank rows
+                        raw: false // Convert to strings for consistency
+                    });
+                    
+                    console.log(`Sheet "${sheetName}" has ${jsonData.length} rows`);
+                    
+                    if (jsonData.length === 0) return;
+                    
+                    // Find the header row (first non-empty row)
+                    let headerRowIndex = 0;
+                    while (headerRowIndex < jsonData.length && 
+                           (!jsonData[headerRowIndex] || jsonData[headerRowIndex].every(cell => !cell))) {
+                        headerRowIndex++;
+                    }
+                    
+                    if (headerRowIndex >= jsonData.length) return;
+                    
+                    const headers = jsonData[headerRowIndex].map((header, i) => 
+                        header || `Column_${i + 1}`
+                    );
+                    
+                    const dataRows = jsonData.slice(headerRowIndex + 1);
+                    
+                    // Convert to object array
+                    const sheetData = dataRows
+                        .filter(row => row && row.some(cell => cell !== null && cell !== undefined && cell !== ''))
+                        .map((row, rowIndex) => {
+                            const obj = {};
+                            headers.forEach((header, colIndex) => {
+                                const value = row[colIndex];
+                                obj[header] = value !== null && value !== undefined ? value : '';
+                            });
+                            
+                            // Add sheet metadata if multiple sheets
+                            if (workbook.SheetNames.length > 1) {
+                                obj._sheet = sheetName;
+                                obj._sheetIndex = index;
+                            }
+                            
+                            return obj;
+                        });
+                    
+                    console.log(`Processed ${sheetData.length} data rows from sheet "${sheetName}"`);
+                    allData = allData.concat(sheetData);
+                });
+                
+                console.log(`Total Excel records processed: ${allData.length}`);
+                resolve(allData);
+                
             } catch (error) {
-                reject(new Error('Error parsing Excel file'));
+                console.error('Excel parsing error:', error);
+                reject(new Error('Error parsing Excel file: ' + error.message));
             }
         };
-        reader.onerror = () => reject(new Error('Error reading file'));
+        reader.onerror = () => reject(new Error('Error reading Excel file'));
         reader.readAsArrayBuffer(file);
     });
 }
