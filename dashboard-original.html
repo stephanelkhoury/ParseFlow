@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
+    <title>ParseFlow Dashboard - Data Management</title>
+    
+    <!-- Responsive Design System -->
+    <link rel="stylesheet" href="premium-colors.css">
+    <link rel="stylesheet" href="responsive-design.css">
+    <link rel="stylesheet" href="dashboard-styles.css">
+    <link rel="stylesheet" href="mvc-styles.css">
+    <link rel="stylesheet" href="mvc-utilities.css">
+    
+    <!-- External Libraries -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Theme Management -->
+    <script src="theme-manager.js"></script>
+</head>
+<body class="theme-blue">
+    <!-- Navigation Bar -->
+    <nav class="navbar" style="background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-dark));">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <span class="hidden-mobile">ParseFlow</span>
+                <span class="hidden-tablet hidden-desktop">PF</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#" class="nav-link active" data-section="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span class="hidden-mobile">Dashboard</span>
+                </a>
+                <a href="#" class="nav-link" data-section="data">
+                    <i class="fas fa-table"></i>
+                    <span class="hidden-mobile">Data View</span>
+                </a>
+                <a href="#" class="nav-link" data-section="charts">
+                    <i class="fas fa-chart-bar"></i>
+                    <span class="hidden-mobile">Charts</span>
+                </a>
+                <a href="#" class="nav-link" data-section="statistics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span class="hidden-mobile">Statistics</span>
+                </a>
+                <a href="#" class="nav-link update-data-btn">
+                    <i class="fas fa-upload"></i>
+                    <span class="hidden-mobile">Update Data</span>
+                </a>
+                <a href="index.html" class="nav-link">
+                    <i class="fas fa-plus"></i>
+                    <span class="hidden-mobile">New Upload</span>
+                </a>
+            </div>
+            <div class="nav-actions hidden-mobile">
+                <button class="export-btn" onclick="exportAllData()">
+                    <i class="fas fa-download"></i>
+                    <span class="hidden-mobile">Export All</span>
+                </button>
+                <button class="clear-btn" onclick="clearAllData()">
+                    <i class="fas fa-trash"></i>
+                    <span class="hidden-mobile">Clear All</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="content-section active">
+            <div class="dashboard-header">
+                <h1><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h1>
+                <div class="summary-stats">
+                    <div class="stat-box">
+                        <div class="stat-number" id="totalRecords">0</div>
+                        <div class="stat-label">Total Records</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="totalFiles">0</div>
+                        <div class="stat-label">Files Uploaded</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="lastUpdated">Never</div>
+                        <div class="stat-label">Last Updated</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="search-section">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search by name, company, email...">
+                </div>
+                <div class="filter-options">
+                    <select id="companyFilter">
+                        <option value="">All Companies</option>
+                    </select>
+                    <select id="sortBy">
+                        <option value="name">Sort by Name</option>
+                        <option value="company">Sort by Company</option>
+                        <option value="email">Sort by Email</option>
+                        <option value="date">Sort by Date Added</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Cards Grid -->
+            <div class="cards-container" id="cardsContainer">
+                <!-- Cards will be dynamically generated here -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <!-- Pagination controls will be generated here -->
+            </div>
+        </section>
+
+        <!-- Data View Section -->
+        <section id="data-section" class="content-section">
+            <div class="section-header">
+                <h2><i class="fas fa-table"></i> Data Table View</h2>
+                <div class="view-controls">
+                    <button class="view-btn active" data-view="table">
+                        <i class="fas fa-table"></i> Table
+                    </button>
+                    <button class="view-btn" data-view="json">
+                        <i class="fas fa-code"></i> JSON
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table View -->
+            <div class="data-view" id="tableView">
+                <div class="table-container">
+                    <table id="dataTable">
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+                <div class="table-info">
+                    <span id="recordCount">0 records</span>
+                    <span id="columnCount">0 columns</span>
+                </div>
+            </div>
+
+            <!-- JSON View -->
+            <div class="data-view" id="jsonView" style="display: none;">
+                <div class="json-container">
+                    <pre id="jsonDisplay"></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section id="charts-section" class="content-section">
+            <div class="section-header">
+                <h2><i class="fas fa-chart-bar"></i> Data Visualization</h2>
+                <div class="chart-controls">
+                    <select id="chartType">
+                        <option value="bar">Bar Chart</option>
+                        <option value="line">Line Chart</option>
+                        <option value="pie">Pie Chart</option>
+                        <option value="doughnut">Doughnut Chart</option>
+                    </select>
+                    <select id="xAxis">
+                        <option value="">Select X-Axis</option>
+                    </select>
+                    <select id="yAxis">
+                        <option value="">Select Y-Axis</option>
+                    </select>
+                    <button onclick="updateChart()" class="update-chart-btn">Update Chart</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="dataChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section id="statistics-section" class="content-section">
+            <h2><i class="fas fa-chart-pie"></i> Data Statistics</h2>
+            <div class="stats-grid" id="statsGrid"></div>
+        </section>
+    </main>
+
+    <!-- Detail Modal -->
+    <div class="modal" id="detailModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user"></i> Contact Details</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Detail content will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button onclick="editRecord()" class="edit-btn">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button onclick="deleteRecord()" class="delete-btn">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+                <button onclick="closeModal()" class="close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Data Modal -->
+    <div class="modal" id="updateModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-upload"></i> Update Data</h3>
+                <button class="modal-close" onclick="closeUpdateModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" id="updateUploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3>Add New Data</h3>
+                    <p>Upload JSON or Excel files to add to existing database</p>
+                    <input type="file" id="updateFileInput" accept=".json,.xlsx,.xls" multiple hidden>
+                    <button class="upload-btn" onclick="document.getElementById('updateFileInput').click()">
+                        <i class="fas fa-plus"></i> Choose Files
+                    </button>
+                </div>
+                <div class="file-list" id="updateFileList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading" id="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>Processing your data...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="dashboard-script.js"></script>
+    
+    <!-- Simple Dashboard Fix -->
+    <script>
+        // Ensure dashboard is visible on load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Applying dashboard visibility fix...');
+            
+            // Force show dashboard section
+            const dashboardSection = document.getElementById('dashboard-section');
+            if (dashboardSection) {
+                dashboardSection.style.display = 'block';
+                dashboardSection.classList.add('active');
+                console.log('Dashboard section is now visible');
+            }
+            
+            // Setup navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const section = this.getAttribute('data-section');
+                    if (section) {
+                        // Hide all sections
+                        document.querySelectorAll('.content-section').forEach(s => {
+                            s.style.display = 'none';
+                            s.classList.remove('active');
+                        });
+                        
+                        // Show target section
+                        const target = document.getElementById(section + '-section');
+                        if (target) {
+                            target.style.display = 'block';
+                            target.classList.add('active');
+                        }
+                        
+                        // Update active nav
+                        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                        this.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

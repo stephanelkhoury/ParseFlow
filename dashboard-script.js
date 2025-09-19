@@ -287,9 +287,16 @@ let selectedRecordId = null;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Dashboard initializing...');
     initializeDashboard();
     setupEventListeners();
     loadDashboardData();
+    
+    // Show dashboard section by default - with fallback
+    setTimeout(() => {
+        showSection('dashboard');
+        console.log('Dashboard section should now be visible');
+    }, 100);
 });
 
 function initializeDashboard() {

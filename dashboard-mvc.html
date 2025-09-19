@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
     <title>ParseFlow - Data Parser & Visualizer</title>
     
     <!-- External Libraries -->
@@ -12,6 +12,7 @@
     
     <!-- Premium Design System -->
     <link rel="stylesheet" href="premium-colors.css">
+    <link rel="stylesheet" href="responsive-design.css">
     <link rel="stylesheet" href="dashboard-styles.css">
     <link rel="stylesheet" href="mvc-styles.css">
     <link rel="stylesheet" href="mvc-utilities.css">
@@ -25,33 +26,34 @@
         <div class="nav-container">
             <div class="nav-brand">
                 <i class="fas fa-chart-line"></i>
-                ParseFlow
+                <span class="hidden-mobile">ParseFlow</span>
+                <span class="hidden-tablet hidden-desktop">PF</span>
             </div>
             
             <div class="nav-menu">
                 <button class="nav-item active" data-view="dashboard">
                     <i class="fas fa-tachometer-alt"></i>
-                    Dashboard
+                    <span class="hidden-mobile">Dashboard</span>
                 </button>
                 <button class="nav-item" data-view="parsers">
                     <i class="fas fa-database"></i>
-                    Parsers
+                    <span class="hidden-mobile">Parsers</span>
                 </button>
                 <button class="nav-item" data-view="data">
                     <i class="fas fa-table"></i>
-                    Data
+                    <span class="hidden-mobile">Data</span>
                 </button>
                 <button class="nav-item" data-view="charts">
                     <i class="fas fa-chart-bar"></i>
-                    Charts
+                    <span class="hidden-mobile">Charts</span>
                 </button>
                 <button class="nav-item" data-view="import">
                     <i class="fas fa-upload"></i>
-                    Import
+                    <span class="hidden-mobile">Import</span>
                 </button>
             </div>
             
-            <div class="nav-status">
+            <div class="nav-status hidden-mobile">
                 <div class="active-parser">
                     <i class="fas fa-database"></i>
                     <span id="active-parser-name">Loading...</span>

@@ -19,13 +19,16 @@
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Theme Management -->
+    <script src="theme-manager.js"></script>
 </head>
-<body>
+<body class="theme-blue">
     <!-- Navigation Header -->
-    <nav class="navbar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <nav class="navbar" style="background: linear-gradient(135deg, var(--theme-primary), var(--theme-primary-dark));">
         <div class="nav-container">
-            <div class="nav-brand" style="color: white;">
-                <i class="fas fa-chart-line" style="color: white;"></i>
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
                 <span class="hidden-mobile">ParseFlow</span>
                 <span class="hidden-tablet hidden-desktop">PF</span>
             </div>
@@ -55,13 +58,32 @@
                     <i class="fas fa-chart-pie"></i>
                     <span class="hidden-mobile">Statistics</span>
                 </button>
-            </div>
-            
-            <div class="nav-actions">
-                <button class="clear-btn" onclick="alert('Button clicked!'); window.showClearDataModal();" title="Clear All Data">
-                    <i class="fas fa-trash"></i>
-                    <span class="hidden-mobile">Clear Data</span>
-                </button>
+                
+                <!-- Theme Selector -->
+                <div class="theme-selector">
+                    <button id="themeToggle" class="theme-btn" title="Change Theme">
+                        <i class="fas fa-palette"></i>
+                        <span class="hidden-mobile">Theme</span>
+                    </button>
+                    <div class="theme-dropdown">
+                        <button data-theme="blue" class="theme-option">
+                            <span class="theme-preview blue"></span>
+                            <span class="hidden-mobile">Modern Blue</span>
+                        </button>
+                        <button data-theme="purple" class="theme-option">
+                            <span class="theme-preview purple"></span>
+                            <span class="hidden-mobile">Elegant Purple</span>
+                        </button>
+                        <button data-theme="teal" class="theme-option">
+                            <span class="theme-preview teal"></span>
+                            <span class="hidden-mobile">Sophisticated Teal</span>
+                        </button>
+                        <button data-theme="orange" class="theme-option">
+                            <span class="theme-preview orange"></span>
+                            <span class="hidden-mobile">Warm Orange</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -325,40 +347,6 @@
         </div>
     </div>
 
-    <!-- Clear Data Confirmation Modal -->
-    <div class="modal" id="clearDataModal" style="display: none;">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h3><i class="fas fa-trash"></i> Clear All Data</h3>
-                <button class="modal-close" onclick="window.closeClearDataModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div style="text-align: center; padding: 2rem;">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: #ff6b6b; margin-bottom: 1.5rem;"></i>
-                    <h3 style="color: #333; margin-bottom: 1rem;">Are you sure?</h3>
-                    <p style="color: #666; margin-bottom: 2rem; line-height: 1.6;">
-                        This will permanently delete all your data including:
-                        <br>• All imported records
-                        <br>• Upload history
-                        <br>• Statistics and metadata
-                        <br><br>
-                        <strong style="color: #ff6b6b;">This action cannot be undone!</strong>
-                    </p>
-                    <div style="display: flex; gap: 1rem; justify-content: center;">
-                        <button onclick="window.closeClearDataModal()" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
-                            <i class="fas fa-times"></i> Cancel
-                        </button>
-                        <button onclick="window.confirmClearAllData()" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
-                            <i class="fas fa-trash"></i> Yes, Delete All Data
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Loading Spinner -->
     <div class="loading" id="loading" style="display: none;">
         <div class="spinner"></div>
@@ -597,18 +585,6 @@
             document.getElementById('lastUpdated').textContent = lastUpdated;
         }
 
-        // Helper function to format field names
-        function formatFieldName(fieldName) {
-            if (!fieldName) return '';
-            
-            return fieldName
-                .replace(/_/g, ' ')  // Replace underscores with spaces
-                .replace(/([a-z])([A-Z])/g, '$1 $2')  // Add space before capital letters
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
-        }
-
         function updateRecentActivity() {
             const metadata = db.getMetadata();
             const activityList = document.getElementById('activityList');
@@ -647,8 +623,8 @@
             // Get column headers
             const columns = Object.keys(records[0]).filter(key => !key.startsWith('_'));
             
-            // Create table header with formatted field names
-            tableHead.innerHTML = `<tr>${columns.map(col => `<th>${formatFieldName(col)}</th>`).join('')}</tr>`;
+            // Create table header
+            tableHead.innerHTML = `<tr>${columns.map(col => `<th>${col}</th>`).join('')}</tr>`;
             
             // Create table body
             tableBody.innerHTML = records.map(record => `
@@ -676,10 +652,10 @@
             const columns = Object.keys(records[0]).filter(key => !key.startsWith('_'));
             
             xAxisSelect.innerHTML = '<option value="">Select X-Axis</option>' + 
-                columns.map(col => `<option value="${col}">${formatFieldName(col)}</option>`).join('');
+                columns.map(col => `<option value="${col}">${col}</option>`).join('');
                 
             yAxisSelect.innerHTML = '<option value="">Select Y-Axis</option>' + 
-                columns.map(col => `<option value="${col}">${formatFieldName(col)}</option>`).join('');
+                columns.map(col => `<option value="${col}">${col}</option>`).join('');
         }
 
         function loadStatistics() {
@@ -713,9 +689,9 @@
                 const uniqueValues = [...new Set(values)];
                 
                 stats.push({
-                    title: formatFieldName(col),
+                    title: col,
                     value: uniqueValues.length,
-                    description: `Unique ${formatFieldName(col)} values`
+                    description: `Unique ${col} values`
                 });
             });
             
@@ -750,131 +726,33 @@
             const cardsContainer = document.getElementById('cardsContainer');
             
             if (records.length === 0) {
-                cardsContainer.innerHTML = '<div class="no-data"><i class="fas fa-inbox"></i><h3>No Data Available</h3><p>Upload some data to see contact cards</p></div>';
+                cardsContainer.innerHTML = '<div class="no-data">No data available</div>';
                 return;
             }
             
-            cardsContainer.innerHTML = records.map((record, index) => {
+            cardsContainer.innerHTML = records.map(record => {
                 const keys = Object.keys(record).filter(key => !key.startsWith('_'));
-                
-                // Try to find common field names
-                const nameField = keys.find(key => 
-                    key.toLowerCase().includes('name') || 
-                    key.toLowerCase().includes('full') ||
-                    key.toLowerCase() === 'name' ||
-                    key.toLowerCase() === 'fullname'
-                ) || keys[0];
-                
-                const companyField = keys.find(key => 
-                    key.toLowerCase().includes('company') || 
-                    key.toLowerCase().includes('organization') ||
-                    key.toLowerCase().includes('org')
-                ) || keys[1];
-                
-                const emailField = keys.find(key => 
-                    key.toLowerCase().includes('email') || 
-                    key.toLowerCase().includes('mail') ||
-                    key.toLowerCase() === 'email'
-                ) || keys.find(key => record[key] && record[key].toString().includes('@'));
-                
-                const descriptionField = keys.find(key => 
-                    key.toLowerCase().includes('description') || 
-                    key.toLowerCase().includes('bio') ||
-                    key.toLowerCase().includes('about') ||
-                    key.toLowerCase().includes('notes')
-                );
-                
-                const fullName = record[nameField] || 'Unknown Contact';
-                const company = record[companyField] || 'No Company';
-                const email = record[emailField] || 'No Email';
-                const description = record[descriptionField] || '';
-                
-                // Generate initials more safely
-                const nameStr = fullName.toString().trim();
-                let initials = '??';
-                
-                if (nameStr && nameStr !== 'Unknown Contact' && nameStr.length > 0) {
-                    // Remove any non-alphabetic characters and split by spaces
-                    const cleanName = nameStr.replace(/[^a-zA-Z\s]/g, '').trim();
-                    if (cleanName.length > 0) {
-                        const nameParts = cleanName.split(/\s+/).filter(part => part.length > 0);
-                        
-                        if (nameParts.length >= 2) {
-                            // Use first letter of first two words
-                            initials = (nameParts[0][0] + nameParts[1][0]).toUpperCase();
-                        } else if (nameParts.length === 1) {
-                            const singleName = nameParts[0];
-                            if (singleName.length >= 2) {
-                                // Use first two letters of single name
-                                initials = (singleName[0] + singleName[1]).toUpperCase();
-                            } else if (singleName.length === 1) {
-                                // For single character names, use it twice
-                                initials = (singleName[0] + singleName[0]).toUpperCase();
-                            }
-                        }
-                    }
-                }
-                
-                // Ensure initials is always exactly 2 characters
-                if (initials.length !== 2) {
-                    initials = '??';
-                }
-                
-                // Truncate description for preview
-                const shortDescription = description.length > 100 ? description.substring(0, 100) + '...' : description;
-                const hasLongDescription = description.length > 100;
+                const firstKey = keys[0];
+                const secondKey = keys[1];
+                const initials = record[firstKey] ? record[firstKey].toString().substring(0, 2).toUpperCase() : '??';
                 
                 return `
                     <div class="contact-card" onclick="showRecordDetails('${record._metadata?.id}')">
                         <div class="contact-header">
                             <div class="contact-avatar">${initials}</div>
                             <div class="contact-info">
-                                <h3>${fullName}</h3>
-                                <div class="company">${company}</div>
+                                <h3>${record[firstKey] || 'Unknown'}</h3>
+                                <div class="company">${record[secondKey] || ''}</div>
                             </div>
                         </div>
                         <div class="contact-details">
-                            <div class="contact-email">
-                                <i class="fas fa-envelope"></i>
-                                ${email}
-                            </div>
-                            ${description ? `
-                                <div class="contact-description">
-                                    <span class="description-preview" id="preview-${index}">${shortDescription}</span>
-                                    <span class="description-full" id="full-${index}">${description}</span>
-                                    ${hasLongDescription ? `
-                                        <button class="see-more-btn" onclick="toggleDescription(${index}, event)">
-                                            <span class="see-more-text">See More</span>
-                                        </button>
-                                    ` : ''}
-                                </div>
-                            ` : ''}
-                        </div>
-                        <div class="contact-meta">
-                            <span>Added: ${new Date(record._metadata?.uploadedAt || Date.now()).toLocaleDateString()}</span>
-                            <span class="contact-source">${record._metadata?.fileName || 'Unknown'}</span>
+                            ${keys.slice(2, 5).map(key => 
+                                `<div><i class="fas fa-info-circle"></i> ${key}: ${record[key] || 'N/A'}</div>`
+                            ).join('')}
                         </div>
                     </div>
                 `;
             }).join('');
-        }
-
-        function toggleDescription(index, event) {
-            event.stopPropagation();
-            const preview = document.getElementById(`preview-${index}`);
-            const full = document.getElementById(`full-${index}`);
-            const btn = event.target.closest('.see-more-btn');
-            const btnText = btn.querySelector('.see-more-text');
-            
-            if (preview.style.display === 'none') {
-                preview.style.display = 'block';
-                full.style.display = 'none';
-                btnText.textContent = 'See More';
-            } else {
-                preview.style.display = 'none';
-                full.style.display = 'block';
-                btnText.textContent = 'See Less';
-            }
         }
 
         function loadJsonView() {
@@ -897,7 +775,7 @@
                 <div class="record-details">
                     ${keys.map(key => `
                         <div class="detail-row">
-                            <strong>${formatFieldName(key)}:</strong>
+                            <strong>${key}:</strong>
                             <span>${record[key] || 'N/A'}</span>
                         </div>
                     `).join('')}
@@ -917,23 +795,6 @@
 
         function closeModal() {
             document.getElementById('detailModal').style.display = 'none';
-        }
-
-        // Clear data modal functions
-        function showClearDataModal() {
-            console.log('showClearDataModal called');
-            document.getElementById('clearDataModal').style.display = 'flex';
-        }
-
-        function closeClearDataModal() {
-            document.getElementById('clearDataModal').style.display = 'none';
-        }
-
-        function confirmClearAllData() {
-            db.clearAll();
-            loadDashboardData();
-            showNotification('All data cleared successfully!', 'success');
-            closeClearDataModal();
         }
 
         // File handling functions
@@ -1023,18 +884,15 @@
         }
 
         function handleSearch() {
-            currentPage = 1;
-            loadCards();
-        }
-
-        function handleFilter() {
-            currentPage = 1; 
-            loadCards();
-        }
-
-        function handleSort() {
-            currentPage = 1;
-            loadCards();
+            const query = document.getElementById('searchInput').value;
+            const records = query ? db.search(query) : db.getAllRecords();
+            
+            // Update current view with filtered results
+            const activeViewBtn = document.querySelector('.view-btn.active');
+            if (activeViewBtn) {
+                const viewType = activeViewBtn.getAttribute('data-view');
+                // You can implement specific filtering logic here
+            }
         }
 
         function updateChart() {
@@ -1161,10 +1019,6 @@
         window.showView = showView;
         window.updateChart = updateChart;
         window.closeModal = closeModal;
-        window.showClearDataModal = showClearDataModal;
-        window.closeClearDataModal = closeClearDataModal;
-        window.confirmClearAllData = confirmClearAllData;
-        window.toggleDescription = toggleDescription;
     </script>
 </body>
 </html>

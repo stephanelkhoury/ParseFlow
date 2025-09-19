@@ -8,7 +8,7 @@ Your ParseFlow application now features a sophisticated, modern color design sys
 ### 1. **Modern Blue** (Default)
 - **Primary**: `#2563eb` - Professional blue
 - **Accent**: `#3b82f6` - Bright blue
-- **Dark**: `#1e40af` - Deep blue
+- **Dark**: `#white` - Deep blue
 - **Perfect for**: Professional, corporate, trustworthy feel
 
 ### 2. **Elegant Purple**

@@ -7,7 +7,7 @@
 [style*="color: #ffffff"],
 [style*="color: rgba(255, 255, 255"],
 .text-white {
-    color: #1e40af !important;
+    color: #white !important;
 }
 
 /* Primary text colors for MVC */
@@ -42,7 +42,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* MVC Navigation - Use blue theme instead of white */
 .navbar {
-    background: linear-gradient(135deg, #2563eb, #1e40af) !important;
+    background: linear-gradient(135deg, #2563eb, #white) !important;
 }
 
 .nav-item {

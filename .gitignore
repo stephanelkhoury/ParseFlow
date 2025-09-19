@@ -124,3 +124,23 @@ build/
 # Server process files
 server.pid
 server.port
+dashboard-clean.css
+dashboard-clean.html
+dashboard-emergency-fixes.css
+dashboard-mvc.html
+dashboard-script.js
+dashboard-styles.css
+dashboard-test.html
+dashboard.html
+index.html
+mvc-styles.css
+responsive-demo.html
+responsive-design.css
+RESPONSIVE-GUIDE.md
+RESPONSIVE-IMPLEMENTATION-GUIDE.md
+dashboard-mvc.html
+dashboard-script.js
+dashboard-styles.css
+dashboard.html
+index.html
+mvc-styles.css

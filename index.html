@@ -2,40 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
     <title>ParseFlow - Data Parser & Visualizer</title>
+    
+    <!-- Responsive Design System -->
+    <link rel="stylesheet" href="premium-colors.css">
+    <link rel="stylesheet" href="responsive-design.css">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mvc-utilities.css">
+    
+    <!-- External Libraries -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
+    <div class="container responsive-container">
         <!-- Header -->
-        <header class="header">
-                            <div class="header-content">
-                    <h1 class="title">
-                        <i class="fas fa-chart-line"></i>
-                        ParseFlow
-                    </h1>
-                    <p class="subtitle">Import, Parse & Visualize Your Data</p>
-                    <a href="dashboard.html" class="dashboard-link">
-                        <i class="fas fa-tachometer-alt"></i> View Dashboard
+        <header class="header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="header-content responsive-padding">
+                <h1 class="title" style="color: white;">
+                    <i class="fas fa-chart-line" style="color: white;"></i>
+                    ParseFlow
+                </h1>
+                <p class="subtitle" style="color: rgba(255, 255, 255, 0.9);">Import, Parse & Visualize Your Data</p>
+                
+                <!-- Responsive Navigation -->
+                <nav class="header-nav">
+                    <a href="dashboard.html" class="dashboard-link premium-button">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="nav-text hidden-mobile">View Dashboard</span>
+                        <span class="nav-text-mobile visible-mobile">Dashboard</span>
                     </a>
-                </div>
+                </nav>
+            </div>
         </header>
 
         <!-- File Upload Section -->
-        <section class="upload-section">
-            <div class="upload-card">
+        <section class="upload-section responsive-section">
+            <div class="upload-card glass-effect">
                 <div class="upload-area" id="uploadArea">
                     <div class="upload-icon">
                         <i class="fas fa-cloud-upload-alt"></i>
                     </div>
-                    <h3>Drop your files here</h3>
-                    <p>Supports JSON and Excel files (.xlsx, .xls)</p>
+                    <h3 class="responsive-text">Drop your files here</h3>
+                    <p class="responsive-text">
+                        <span class="hidden-mobile">Supports JSON and Excel files (.xlsx, .xls)</span>
+                        <span class="visible-mobile">JSON & Excel files</span>
+                    </p>
                     <input type="file" id="fileInput" accept=".json,.xlsx,.xls" multiple hidden>
-                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
-                        <i class="fas fa-plus"></i> Choose Files
+                    <button class="upload-btn premium-button touch-friendly" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-plus"></i>
+                        <span class="hidden-mobile">Choose Files</span>
+                        <span class="visible-mobile">Upload</span>
                     </button>
                 </div>
                 <div class="file-list" id="fileList"></div>
@@ -43,31 +61,38 @@
         </section>
 
         <!-- Data Display Section -->
-        <section class="data-section" id="dataSection" style="display: none;">
-            <div class="section-header">
-                <h2><i class="fas fa-table"></i> Parsed Data</h2>
-                <div class="view-controls">
-                    <button class="view-btn active" data-view="table">
-                        <i class="fas fa-table"></i> Table
+        <section class="data-section responsive-section" id="dataSection" style="display: none;">
+            <div class="section-header responsive-flex">
+                <h2 class="responsive-text">
+                    <i class="fas fa-table"></i>
+                    <span class="hidden-mobile">Parsed Data</span>
+                    <span class="visible-mobile">Data</span>
+                </h2>
+                <div class="view-controls responsive-tabs">
+                    <button class="view-btn active touch-friendly" data-view="table">
+                        <i class="fas fa-table"></i>
+                        <span class="hidden-mobile">Table</span>
                     </button>
-                    <button class="view-btn" data-view="chart">
-                        <i class="fas fa-chart-bar"></i> Chart
+                    <button class="view-btn touch-friendly" data-view="chart">
+                        <i class="fas fa-chart-bar"></i>
+                        <span class="hidden-mobile">Chart</span>
                     </button>
-                    <button class="view-btn" data-view="json">
-                        <i class="fas fa-code"></i> JSON
+                    <button class="view-btn touch-friendly" data-view="json">
+                        <i class="fas fa-code"></i>
+                        <span class="hidden-mobile">JSON</span>
                     </button>
                 </div>
             </div>
 
             <!-- Table View -->
             <div class="data-view" id="tableView">
-                <div class="table-container">
+                <div class="table-container responsive-table">
                     <table id="dataTable">
                         <thead id="tableHead"></thead>
                         <tbody id="tableBody"></tbody>
                     </table>
                 </div>
-                <div class="table-info">
+                <div class="table-info responsive-info">
                     <span id="recordCount">0 records</span>
                     <span id="columnCount">0 columns</span>
                 </div>
@@ -75,43 +100,50 @@
 
             <!-- Chart View -->
             <div class="data-view" id="chartView" style="display: none;">
-                <div class="chart-controls">
-                    <select id="chartType">
+                <div class="chart-controls responsive-controls">
+                    <select id="chartType" class="responsive-select touch-friendly">
                         <option value="bar">Bar Chart</option>
                         <option value="line">Line Chart</option>
                         <option value="pie">Pie Chart</option>
                         <option value="doughnut">Doughnut Chart</option>
                     </select>
-                    <select id="xAxis">
+                    <select id="xAxis" class="responsive-select touch-friendly">
                         <option value="">Select X-Axis</option>
                     </select>
-                    <select id="yAxis">
+                    <select id="yAxis" class="responsive-select touch-friendly">
                         <option value="">Select Y-Axis</option>
                     </select>
                 </div>
-                <div class="chart-container">
+                <div class="chart-container responsive-chart">
                     <canvas id="dataChart"></canvas>
                 </div>
             </div>
 
             <!-- JSON View -->
             <div class="data-view" id="jsonView" style="display: none;">
-                <div class="json-container">
+                <div class="json-container responsive-code">
                     <pre id="jsonDisplay"></pre>
                 </div>
             </div>
         </section>
 
         <!-- Statistics Section -->
-        <section class="stats-section" id="statsSection" style="display: none;">
-            <h2><i class="fas fa-chart-pie"></i> Data Statistics</h2>
-            <div class="stats-grid" id="statsGrid"></div>
+        <section class="stats-section responsive-section" id="statsSection" style="display: none;">
+            <h2 class="responsive-text">
+                <i class="fas fa-chart-pie"></i>
+                <span class="hidden-mobile">Data Statistics</span>
+                <span class="visible-mobile">Stats</span>
+            </h2>
+            <div class="stats-grid responsive-grid" id="statsGrid"></div>
         </section>
 
         <!-- Loading Spinner -->
-        <div class="loading" id="loading" style="display: none;">
+        <div class="loading responsive-loading" id="loading" style="display: none;">
             <div class="spinner"></div>
-            <p id="loadingText">Processing your data...</p>
+            <p id="loadingText" class="responsive-text">
+                <span class="hidden-mobile">Processing your data...</span>
+                <span class="visible-mobile">Processing...</span>
+            </p>
         </div>
     </div>
 
