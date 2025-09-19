@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParseFlow - Data Parser & Visualizer</title>
+    
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="dashboard-styles.css">
+    <link rel="stylesheet" href="mvc-styles.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                ParseFlow
+            </div>
+            
+            <div class="nav-menu">
+                <button class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </button>
+                <button class="nav-item" data-view="parsers">
+                    <i class="fas fa-database"></i>
+                    Parsers
+                </button>
+                <button class="nav-item" data-view="data">
+                    <i class="fas fa-table"></i>
+                    Data
+                </button>
+                <button class="nav-item" data-view="charts">
+                    <i class="fas fa-chart-bar"></i>
+                    Charts
+                </button>
+                <button class="nav-item" data-view="import">
+                    <i class="fas fa-upload"></i>
+                    Import
+                </button>
+            </div>
+            
+            <div class="nav-status">
+                <div class="active-parser">
+                    <i class="fas fa-database"></i>
+                    <span id="active-parser-name">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        
+        <!-- Dashboard View -->
+        <section id="dashboard-view" class="view-section">
+            <div class="dashboard-header">
+                <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-table"></i></div>
+                        <div class="stat-content">
+                            <h3 id="total-records">0</h3>
+                            <span>Total Records</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-content">
+                            <h3 id="checked-records">0</h3>
+                            <span>Checked Records</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-upload"></i> Quick Import</h3>
+                    <div class="upload-area" id="upload-area">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drag & drop files here or click to browse</p>
+                        <input type="file" id="fileInput" multiple accept=".json,.xlsx,.xls" style="display: none;">
+                        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                            Choose Files
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-chart-pie"></i> Data Overview</h3>
+                    <div class="chart-container">
+                        <canvas id="overview-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Parsers Management View -->
+        <section id="parsers-view" class="view-section" style="display: none;">
+            <div class="section-header">
+                <h1><i class="fas fa-database"></i> Parser Management</h1>
+                <p>Create and manage multiple parser instances with isolated data storage</p>
+            </div>
+            
+            <div id="parser-section" class="section-content">
+                <!-- Parser Selection View will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Data Management View -->
+        <section id="data-view" class="view-section" style="display: none;">
+            <div class="section-header">
+                <h1><i class="fas fa-table"></i> Data Management</h1>
+                <p>View, edit, and manage your imported data with advanced filtering and bulk operations</p>
+            </div>
+            
+            <div id="data-section" class="section-content">
+                <!-- Data Grid View will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Charts View -->
+        <section id="charts-view" class="view-section" style="display: none;">
+            <div class="section-header">
+                <h1><i class="fas fa-chart-bar"></i> Data Visualization</h1>
+                <p>Create intelligent charts and visualizations from your data</p>
+            </div>
+            
+            <div class="charts-content">
+                <div class="chart-controls">
+                    <div class="chart-creation">
+                        <h3>Create New Chart</h3>
+                        <div class="chart-form">
+                            <div class="form-group">
+                                <label>Chart Type</label>
+                                <select id="chartType">
+                                    <option value="bar">Bar Chart</option>
+                                    <option value="line">Line Chart</option>
+                                    <option value="pie">Pie Chart</option>
+                                    <option value="doughnut">Doughnut Chart</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>X-Axis Field</label>
+                                <select id="xAxisField">
+                                    <option value="">Select field...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Y-Axis Field</label>
+                                <select id="yAxisField">
+                                    <option value="">Select field...</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" id="createChartBtn">Create Chart</button>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-suggestions" id="chartSuggestions">
+                        <!-- Smart chart suggestions will be rendered here -->
+                    </div>
+                </div>
+                
+                <div class="chart-display">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Import View -->
+        <section id="import-view" class="view-section" style="display: none;">
+            <div class="section-header">
+                <h1><i class="fas fa-upload"></i> Data Import</h1>
+                <p>Import JSON and Excel files with advanced parsing and validation</p>
+            </div>
+            
+            <div class="import-content">
+                <div class="import-area">
+                    <div class="upload-zone" id="import-upload-zone">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3>Drop files here to import</h3>
+                        <p>Supports JSON (.json) and Excel (.xlsx, .xls) files</p>
+                        <div class="upload-actions">
+                            <input type="file" id="importFileInput" multiple accept=".json,.xlsx,.xls" style="display: none;">
+                            <button class="btn btn-primary" onclick="document.getElementById('importFileInput').click()">
+                                <i class="fas fa-folder-open"></i> Browse Files
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="import-options">
+                        <h4>Import Options</h4>
+                        <div class="option-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="skipDuplicates" checked>
+                                Skip duplicate records
+                            </label>
+                        </div>
+                        <div class="option-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="addCheckboxField" checked>
+                                Add checkbox field to records
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="import-history">
+                    <h4>Recent Imports</h4>
+                    <div id="import-history-list">
+                        <!-- Import history will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <!-- Global Loader -->
+    <div id="global-loader" class="global-loader" style="display: none;">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-message">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import ParseFlowApp from './src/ParseFlowApp.js';
+
+        // Initialize the application when DOM is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Starting ParseFlow MVC Application...');
+            
+            try {
+                // Create and initialize the application
+                window.parseFlowApp = new ParseFlowApp();
+                await window.parseFlowApp.initialize();
+                
+                console.log('✅ ParseFlow application ready!');
+                
+            } catch (error) {
+                console.error('❌ Failed to start ParseFlow:', error);
+                
+                // Show error message to user
+                document.body.innerHTML = `
+                    <div class="error-screen">
+                        <div class="error-content">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h2>Failed to Initialize ParseFlow</h2>
+                            <p>There was an error starting the application. Please refresh the page and try again.</p>
+                            <button class="btn btn-primary" onclick="location.reload()">
+                                <i class="fas fa-redo"></i> Reload Page
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        // Handle file input for import view
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'importFileInput') {
+                if (window.parseFlowApp) {
+                    window.parseFlowApp.handleFileImport(e.target.files);
+                }
+            }
+        });
+
+        // Handle drag and drop for import view
+        document.addEventListener('DOMContentLoaded', () => {
+            const importZone = document.getElementById('import-upload-zone');
+            if (importZone) {
+                importZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    importZone.classList.add('drag-over');
+                });
+
+                importZone.addEventListener('dragleave', () => {
+                    importZone.classList.remove('drag-over');
+                });
+
+                importZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    importZone.classList.remove('drag-over');
+                    if (window.parseFlowApp) {
+                        window.parseFlowApp.handleFileImport(e.dataTransfer.files);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
