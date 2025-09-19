@@ -1,21 +1,22 @@
 # ParseFlow 📊
 
-A beautiful, modern web application for importing, parsing, and visualizing JSON and Excel data with an intuitive drag-and-drop interface.
+A beautiful, intelligent web application for importing and visualizing JSON and Excel data with advanced chart capabilities and smart data analysis.
 
-![ParseFlow Banner](https://via.placeholder.com/800x200/667eea/ffffff?text=ParseFlow+-+Data+Parser+%26+Visualizer)
+![ParseFlow Demo](https://img.shields.io/badge/Status-Active-green?style=for-the-badge) ![Version](https://img.shields.io/badge/Version-2.0.0-blue?style=for-the-badge) ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
-## ✨ Features
+## ✨ Key Features
 
-- **📁 File Import**: Drag and drop or select JSON and Excel files (.xlsx, .xls)
-- **🔄 Multi-file Support**: Process multiple files simultaneously
-- **📊 Data Visualization**: 
-  - Interactive tables with sorting and filtering
-  - Charts (Bar, Line, Pie, Doughnut) using Chart.js
-  - Raw JSON view with syntax highlighting
-- **📈 Statistics**: Automatic calculation of data statistics
-- **🎨 Beautiful UI**: Modern, responsive design with smooth animations
-- **💾 Export Options**: Export processed data to CSV or JSON
-- **📱 Mobile Friendly**: Fully responsive design
+### 🧠 **Smart Chart Intelligence**
+- **Automatic Data Analysis**: Intelligent field type detection and pattern recognition
+- **Smart Suggestions**: AI-powered chart type recommendations based on your data
+- **Interactive Insights**: Real-time data statistics and visualization tips
+- **One-Click Generation**: Create optimized charts instantly from suggestions
+
+### 📊 **Advanced Data Import**
+- **Universal Support**: JSON and Excel (.xlsx/.xls) file compatibility
+- **Complete Data Capture**: Imports ALL records including nested structures
+- **Multi-Sheet Processing**: Full Excel workbook support with UTF-8 encoding
+- **� Duplicate Detection**: Comprehensive row-by-row comparison prevents data duplication
 
 ## 🚀 Quick Start
 
