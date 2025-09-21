@@ -13,140 +13,248 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container responsive-container">
-        <!-- Header -->
-        <header class="header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <div class="header-content responsive-padding">
-                <h1 class="title" style="color: white;">
-                    <i class="fas fa-chart-line" style="color: white;"></i>
-                    ParseFlow
-                </h1>
-                <p class="subtitle" style="color: rgba(255, 255, 255, 0.9);">Import, Parse & Visualize Your Data</p>
-                
-                <!-- Responsive Navigation -->
-                <nav class="header-nav">
-                    <a href="dashboard.html" class="dashboard-link premium-button">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span class="nav-text hidden-mobile">View Dashboard</span>
-                        <span class="nav-text-mobile visible-mobile">Dashboard</span>
-                    </a>
-                </nav>
+    <!-- Navigation Header -->
+    <nav class="navbar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="nav-container">
+            <div class="nav-brand" style="color: white;">
+                <i class="fas fa-chart-line" style="color: white;"></i>
+                <span class="hidden-mobile">ParseFlow</span>
+                <span class="hidden-tablet hidden-desktop">PF</span>
             </div>
-        </header>
+            
+            <div class="nav-menu">
+                <button class="nav-item active" data-view="upload">
+                    <i class="fas fa-upload"></i>
+                    <span class="hidden-mobile">Upload</span>
+                </button>
+                <button class="nav-item" data-view="parsers">
+                    <i class="fas fa-database"></i>
+                    <span class="hidden-mobile">Parsers</span>
+                </button>
+                <button class="nav-item" data-view="data">
+                    <i class="fas fa-table"></i>
+                    <span class="hidden-mobile">Data</span>
+                </button>
+                <button class="nav-item" data-view="charts">
+                    <i class="fas fa-chart-bar"></i>
+                    <span class="hidden-mobile">Charts</span>
+                </button>
+                <button class="nav-item" data-view="statistics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span class="hidden-mobile">Statistics</span>
+                </button>
+            </div>
+            
+            <div class="nav-actions">
+                <a href="dashboard.html" class="nav-action-btn" title="Go to Dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span class="hidden-mobile">Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </nav>
 
-        <!-- File Upload Section -->
-        <section class="upload-section responsive-section">
-            <div class="upload-card glass-effect">
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Upload Section -->
+        <section id="upload-view" class="view-section active">
+            <div class="section-header">
+                <h1><i class="fas fa-upload"></i> Upload Data</h1>
+                <p>Upload JSON or Excel files for parsing and analysis</p>
+            </div>
+
+            <div class="section-content">
                 <div class="upload-area" id="uploadArea">
                     <div class="upload-icon">
                         <i class="fas fa-cloud-upload-alt"></i>
                     </div>
-                    <h3 class="responsive-text">Drop your files here</h3>
-                    <p class="responsive-text">
-                        <span class="hidden-mobile">Supports JSON and Excel files (.xlsx, .xls)</span>
-                        <span class="visible-mobile">JSON & Excel files</span>
-                    </p>
+                    <h3>Drop your files here</h3>
+                    <p>Supports JSON and Excel files (.xlsx, .xls)</p>
                     <input type="file" id="fileInput" accept=".json,.xlsx,.xls" multiple hidden>
-                    <button class="upload-btn premium-button touch-friendly" onclick="document.getElementById('fileInput').click()">
-                        <i class="fas fa-plus"></i>
-                        <span class="hidden-mobile">Choose Files</span>
-                        <span class="visible-mobile">Upload</span>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-plus"></i> Choose Files
                     </button>
                 </div>
                 <div class="file-list" id="fileList"></div>
             </div>
         </section>
 
+        <!-- Parsers Configuration Section -->
+        <section id="parsers-view" class="view-section" style="display: none;">
+            <div class="section-header">
+                <h1><i class="fas fa-database"></i> Parser Configuration</h1>
+                <p>Configure and manage data parsers for different file formats</p>
+            </div>
+
+            <div class="section-content">
+                <div class="parser-grid">
+                    <div class="parser-card active">
+                        <div class="parser-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <h3>Auto Parser</h3>
+                        <p>Automatically detects and parses file format</p>
+                        <div class="parser-status">
+                            <span class="status-badge active">Active</span>
+                        </div>
+                    </div>
+                    
+                    <div class="parser-card">
+                        <div class="parser-icon">
+                            <i class="fas fa-file-code"></i>
+                        </div>
+                        <h3>JSON Parser</h3>
+                        <p>Specialized parser for JSON files</p>
+                        <div class="parser-status">
+                            <span class="status-badge available">Available</span>
+                        </div>
+                    </div>
+                    
+                    <div class="parser-card">
+                        <div class="parser-icon">
+                            <i class="fas fa-file-excel"></i>
+                        </div>
+                        <h3>Excel Parser</h3>
+                        <p>Advanced Excel file processing</p>
+                        <div class="parser-status">
+                            <span class="status-badge available">Available</span>
+                        </div>
+                    </div>
+                    
+                    <div class="parser-card">
+                        <div class="parser-icon">
+                            <i class="fas fa-file-csv"></i>
+                        </div>
+                        <h3>CSV Parser</h3>
+                        <p>Comma-separated values parser</p>
+                        <div class="parser-status">
+                            <span class="status-badge available">Available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Data Display Section -->
-        <section class="data-section responsive-section" id="dataSection" style="display: none;">
-            <div class="section-header responsive-flex">
-                <h2 class="responsive-text">
-                    <i class="fas fa-table"></i>
-                    <span class="hidden-mobile">Parsed Data</span>
-                    <span class="visible-mobile">Data</span>
-                </h2>
-                <div class="view-controls responsive-tabs">
-                    <button class="view-btn active touch-friendly" data-view="table">
+        <section id="data-view" class="view-section" style="display: none;">
+            <div class="section-header">
+                <h1><i class="fas fa-table"></i> Parsed Data</h1>
+                <p>View and manage your uploaded data</p>
+            </div>
+
+            <div class="section-content">
+                <div class="view-controls">
+                    <button class="view-btn active" data-view="table">
                         <i class="fas fa-table"></i>
                         <span class="hidden-mobile">Table</span>
                     </button>
-                    <button class="view-btn touch-friendly" data-view="chart">
-                        <i class="fas fa-chart-bar"></i>
-                        <span class="hidden-mobile">Chart</span>
-                    </button>
-                    <button class="view-btn touch-friendly" data-view="json">
+                    <button class="view-btn" data-view="json">
                         <i class="fas fa-code"></i>
                         <span class="hidden-mobile">JSON</span>
                     </button>
                 </div>
+
+                <!-- Table View -->
+                <div class="data-view" id="tableView">
+                    <div class="table-container">
+                        <table id="dataTable">
+                            <thead id="tableHead"></thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="table-info">
+                        <span id="recordCount">0 records</span>
+                        <span id="columnCount">0 columns</span>
+                    </div>
+                </div>
+
+                <!-- JSON View -->
+                <div class="data-view" id="jsonView" style="display: none;">
+                    <div class="json-container">
+                        <pre id="jsonDisplay"></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section id="charts-view" class="view-section" style="display: none;">
+            <div class="section-header">
+                <h1><i class="fas fa-chart-bar"></i> Data Visualization</h1>
+                <p>Create interactive charts and graphs from your data</p>
             </div>
 
-            <!-- Table View -->
-            <div class="data-view" id="tableView">
-                <div class="table-container responsive-table">
-                    <table id="dataTable">
-                        <thead id="tableHead"></thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
-                </div>
-                <div class="table-info responsive-info">
-                    <span id="recordCount">0 records</span>
-                    <span id="columnCount">0 columns</span>
-                </div>
-            </div>
-
-            <!-- Chart View -->
-            <div class="data-view" id="chartView" style="display: none;">
-                <div class="chart-controls responsive-controls">
-                    <select id="chartType" class="responsive-select touch-friendly">
+            <div class="section-content">
+                <div class="chart-controls">
+                    <select id="chartType" class="form-select">
                         <option value="bar">Bar Chart</option>
                         <option value="line">Line Chart</option>
                         <option value="pie">Pie Chart</option>
                         <option value="doughnut">Doughnut Chart</option>
                     </select>
-                    <select id="xAxis" class="responsive-select touch-friendly">
+                    <select id="xAxis" class="form-select">
                         <option value="">Select X-Axis</option>
                     </select>
-                    <select id="yAxis" class="responsive-select touch-friendly">
+                    <select id="yAxis" class="form-select">
                         <option value="">Select Y-Axis</option>
                     </select>
                 </div>
-                <div class="chart-container responsive-chart">
+                <div class="chart-container">
                     <canvas id="dataChart"></canvas>
-                </div>
-            </div>
-
-            <!-- JSON View -->
-            <div class="data-view" id="jsonView" style="display: none;">
-                <div class="json-container responsive-code">
-                    <pre id="jsonDisplay"></pre>
                 </div>
             </div>
         </section>
 
         <!-- Statistics Section -->
-        <section class="stats-section responsive-section" id="statsSection" style="display: none;">
-            <h2 class="responsive-text">
-                <i class="fas fa-chart-pie"></i>
-                <span class="hidden-mobile">Data Statistics</span>
-                <span class="visible-mobile">Stats</span>
-            </h2>
-            <div class="stats-grid responsive-grid" id="statsGrid"></div>
-        </section>
+        <section id="statistics-view" class="view-section" style="display: none;">
+            <div class="section-header">
+                <h1><i class="fas fa-chart-pie"></i> Data Statistics</h1>
+                <p>Comprehensive statistical analysis of your data</p>
+            </div>
 
-        <!-- Loading Spinner -->
-        <div class="loading responsive-loading" id="loading" style="display: none;">
-            <div class="spinner"></div>
-            <p id="loadingText" class="responsive-text">
-                <span class="hidden-mobile">Processing your data...</span>
-                <span class="visible-mobile">Processing...</span>
-            </p>
-        </div>
-    </div>
+            <div class="section-content">
+                <div class="stats-grid" id="statsGrid"></div>
+            </div>
+        </section>
+    </main>
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="script.js"></script>
+    
+    <!-- Navigation Script -->
+    <script>
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const navItems = document.querySelectorAll('.nav-item');
+            const viewSections = document.querySelectorAll('.view-section');
+            
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const targetView = this.getAttribute('data-view');
+                    
+                    // Remove active class from all nav items
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    
+                    // Add active class to clicked nav item
+                    this.classList.add('active');
+                    
+                    // Hide all view sections
+                    viewSections.forEach(section => {
+                        section.style.display = 'none';
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show target view section
+                    const targetSection = document.getElementById(targetView + '-view');
+                    if (targetSection) {
+                        targetSection.style.display = 'block';
+                        targetSection.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

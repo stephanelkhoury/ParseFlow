@@ -7,8 +7,8 @@ let uploadedFiles = [];
 const fileInput = document.getElementById('fileInput');
 const uploadArea = document.getElementById('uploadArea');
 const fileList = document.getElementById('fileList');
-const dataSection = document.getElementById('dataSection');
-const statsSection = document.getElementById('statsSection');
+const dataSection = document.getElementById('data-view');
+const statsSection = document.getElementById('statistics-view');
 const loading = document.getElementById('loading');
 
 // Initialize the application
@@ -587,13 +587,39 @@ function hideLoading() {
 }
 
 function showDataSection() {
-    dataSection.style.display = 'block';
-    statsSection.style.display = 'block';
+    // Switch to data view automatically when data is loaded
+    const navItems = document.querySelectorAll('.nav-item');
+    const viewSections = document.querySelectorAll('.view-section');
+    
+    // Remove active class from all nav items
+    navItems.forEach(nav => nav.classList.remove('active'));
+    
+    // Add active class to data nav item
+    const dataNavItem = document.querySelector('.nav-item[data-view="data"]');
+    if (dataNavItem) {
+        dataNavItem.classList.add('active');
+    }
+    
+    // Hide all view sections
+    viewSections.forEach(section => {
+        section.style.display = 'none';
+        section.classList.remove('active');
+    });
+    
+    // Show data view section
+    if (dataSection) {
+        dataSection.style.display = 'block';
+        dataSection.classList.add('active');
+    }
 }
 
 function hideDataSection() {
-    dataSection.style.display = 'none';
-    statsSection.style.display = 'none';
+    if (dataSection) {
+        dataSection.style.display = 'none';
+    }
+    if (statsSection) {
+        statsSection.style.display = 'none';
+    }
 }
 
 // Export functions
