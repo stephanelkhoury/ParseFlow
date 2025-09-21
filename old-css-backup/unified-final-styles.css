@@ -532,9 +532,9 @@ body {
 .modal-content {
     background: white;
     border-radius: 25px;
-    max-width: 650px;
+    max-width: 90%;
     width: 90%;
-    max-height: 80vh;
+    max-height: 90vh;
     overflow-y: auto;
     animation: modalSlideIn 0.3s ease-out;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -723,7 +723,7 @@ body {
 .detail-row span {
     color: #666;
     flex: 1;
-    text-align: right;
+    text-align: left;
     word-break: break-word;
     line-height: 1.5;
 }
