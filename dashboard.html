@@ -565,6 +565,17 @@
                 searchInput.addEventListener('input', handleSearch);
             }
 
+            // Filter and sort functionality
+            const companyFilter = document.getElementById('companyFilter');
+            if (companyFilter) {
+                companyFilter.addEventListener('change', handleFilter);
+            }
+
+            const sortBy = document.getElementById('sortBy');
+            if (sortBy) {
+                sortBy.addEventListener('change', handleSort);
+            }
+
             // View controls
             document.querySelectorAll('.view-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -650,6 +661,8 @@
         function loadDashboardData() {
             updateSummaryStats();
             updateRecentActivity();
+            populateFilterOptions();
+            loadCards();
         }
 
         function updateSummaryStats() {
@@ -847,11 +860,96 @@
         }
 
         function loadCards() {
-            const records = db.getAllRecords();
+            let records = db.getAllRecords();
             const cardsContainer = document.getElementById('cardsContainer');
             
             if (records.length === 0) {
                 cardsContainer.innerHTML = '<div class="no-data"><i class="fas fa-inbox"></i><h3>No Data Available</h3><p>Upload some data to see contact cards</p></div>';
+                return;
+            }
+            
+            // Apply search filter
+            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase().trim();
+            if (searchTerm) {
+                records = records.filter(record => {
+                    const keys = Object.keys(record).filter(key => !key.startsWith('_'));
+                    return keys.some(key => {
+                        const value = record[key];
+                        return value && value.toString().toLowerCase().includes(searchTerm);
+                    });
+                });
+            }
+            
+            // Apply company filter
+            const companyFilter = document.getElementById('companyFilter')?.value;
+            if (companyFilter) {
+                records = records.filter(record => {
+                    const keys = Object.keys(record).filter(key => !key.startsWith('_'));
+                    const companyField = keys.find(key => 
+                        key.toLowerCase().includes('company') || 
+                        key.toLowerCase().includes('organization') ||
+                        key.toLowerCase().includes('org')
+                    );
+                    return companyField && record[companyField] === companyFilter;
+                });
+            }
+            
+            // Apply sorting
+            const sortBy = document.getElementById('sortBy')?.value;
+            if (sortBy && records.length > 0) {
+                records.sort((a, b) => {
+                    const keys = Object.keys(a).filter(key => !key.startsWith('_'));
+                    let fieldA, fieldB;
+                    
+                    switch(sortBy) {
+                        case 'name':
+                            const nameField = keys.find(key => 
+                                key.toLowerCase().includes('name') || 
+                                key.toLowerCase().includes('full') ||
+                                key.toLowerCase() === 'name' ||
+                                key.toLowerCase() === 'fullname'
+                            ) || keys[0];
+                            fieldA = a[nameField] || '';
+                            fieldB = b[nameField] || '';
+                            break;
+                        case 'company':
+                            const companyField = keys.find(key => 
+                                key.toLowerCase().includes('company') || 
+                                key.toLowerCase().includes('organization') ||
+                                key.toLowerCase().includes('org')
+                            ) || keys[1];
+                            fieldA = a[companyField] || '';
+                            fieldB = b[companyField] || '';
+                            break;
+                        case 'email':
+                            const emailField = keys.find(key => 
+                                key.toLowerCase().includes('email') || 
+                                key.toLowerCase().includes('mail') ||
+                                key.toLowerCase() === 'email'
+                            ) || keys.find(key => a[key] && a[key].toString().includes('@'));
+                            fieldA = a[emailField] || '';
+                            fieldB = b[emailField] || '';
+                            break;
+                        default:
+                            fieldA = a[keys[0]] || '';
+                            fieldB = b[keys[0]] || '';
+                    }
+                    
+                    return fieldA.toString().localeCompare(fieldB.toString());
+                });
+            }
+            
+            // Show filtered results count
+            if (searchTerm || companyFilter) {
+                const totalRecords = db.getAllRecords().length;
+                const filteredCount = records.length;
+                document.getElementById('totalRecords').textContent = `${filteredCount} of ${totalRecords}`;
+            } else {
+                document.getElementById('totalRecords').textContent = records.length;
+            }
+            
+            if (records.length === 0) {
+                cardsContainer.innerHTML = '<div class="no-data"><i class="fas fa-search"></i><h3>No Results Found</h3><p>Try adjusting your search criteria</p></div>';
                 return;
             }
             
@@ -1195,6 +1293,8 @@
                     showNotification(`Successfully processed ${totalRecords} records from ${files.length} file(s)`, 'success');
                     updateSummaryStats();
                     updateRecentActivity();
+                    populateFilterOptions();
+                    loadCards();
                 })
                 .catch(error => {
                     console.error('File processing error:', error);
@@ -1257,6 +1357,38 @@
         function handleSort() {
             currentPage = 1;
             loadCards();
+        }
+
+        function populateFilterOptions() {
+            const records = db.getAllRecords();
+            const companyFilter = document.getElementById('companyFilter');
+            
+            if (!companyFilter || records.length === 0) return;
+            
+            // Get unique company values
+            const companies = new Set();
+            records.forEach(record => {
+                const keys = Object.keys(record).filter(key => !key.startsWith('_'));
+                const companyField = keys.find(key => 
+                    key.toLowerCase().includes('company') || 
+                    key.toLowerCase().includes('organization') ||
+                    key.toLowerCase().includes('org')
+                );
+                if (companyField && record[companyField]) {
+                    companies.add(record[companyField]);
+                }
+            });
+            
+            // Clear existing options except "All Companies"
+            companyFilter.innerHTML = '<option value="">All Companies</option>';
+            
+            // Add company options
+            Array.from(companies).sort().forEach(company => {
+                const option = document.createElement('option');
+                option.value = company;
+                option.textContent = company;
+                companyFilter.appendChild(option);
+            });
         }
 
         function updateChart() {
