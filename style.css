@@ -188,6 +188,26 @@ body {
     gap: var(--spacing-sm);
 }
 
+.nav-action-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    text-decoration: none;
+}
+
+.nav-action-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
 .clear-btn {
     background: rgba(239, 68, 68, 0.2);
     color: white;
@@ -250,6 +270,10 @@ body {
     color: var(--gray-600);
     max-width: 600px;
     margin: 0 auto;
+}
+
+.section-content {
+    margin-top: var(--spacing-xl);
 }
 
 /* === RESPONSIVE BREAKPOINTS === */
@@ -880,7 +904,7 @@ body {
 }
 
 #dataTable th {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-purple));
     color: white;
     font-weight: 600;
     text-align: left;
@@ -907,8 +931,8 @@ body {
 
 #dataTable th:hover {
     background: linear-gradient(135deg, 
-        color-mix(in srgb, var(--primary-color) 90%, white), 
-        color-mix(in srgb, var(--secondary-color) 90%, white));
+        color-mix(in srgb, var(--primary-blue) 90%, white), 
+        color-mix(in srgb, var(--primary-purple) 90%, white));
     transform: translateY(-1px);
 }
 
@@ -933,7 +957,7 @@ body {
 
 .no-data-message {
     text-align: center;
-    color: var(--text-muted);
+    color: var(--gray-600);
     font-style: italic;
     padding: 2rem;
 }
@@ -1070,7 +1094,8 @@ body {
     flex-wrap: wrap;
 }
 
-.filter-options select {
+.filter-options select,
+.form-select {
     padding: var(--spacing-sm) var(--spacing-md);
     border: 2px solid rgba(102, 126, 234, 0.1);
     border-radius: var(--radius-lg);
@@ -1081,7 +1106,8 @@ body {
     min-width: 150px;
 }
 
-.filter-options select:focus {
+.filter-options select:focus,
+.form-select:focus {
     outline: none;
     border-color: var(--primary-blue);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -1372,6 +1398,10 @@ body {
     box-shadow: var(--shadow-lg);
 }
 
+.file-list {
+    margin-top: var(--spacing-lg);
+}
+
 /* === PARSER CONFIGURATION === */
 .parser-grid {
     display: grid;
@@ -1533,12 +1563,26 @@ body {
     flex-wrap: wrap;
 }
 
-.chart-controls select {
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: 2px solid rgba(102, 126, 234, 0.1);
-    border-radius: var(--radius-lg);
+/* === STATISTICS === */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-xl);
+}
+
+.stat-card {
     background: white;
-    min-width: 150px;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+    transition: all var(--transition-normal);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
 }
 
 /* === NOTIFICATIONS === */
@@ -1573,6 +1617,23 @@ body {
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+/* === JSON VIEW === */
+.json-container {
+    background: var(--gray-900);
+    color: var(--gray-200);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    overflow-x: auto;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+.json-container pre {
+    margin: 0;
+    white-space: pre-wrap;
 }
 
 /* === UTILITIES === */
