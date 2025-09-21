@@ -6,7 +6,7 @@ A beautiful, intelligent web application for importing and visualizing JSON and 
 
 ## 🚀 Live Demo
 
-**[🌐 Try ParseFlow Live on Vercel](https://parseflow.vercel.app)**
+**[🌐 Try ParseFlow Live on Vercel](https://parse-flow-stephanelkhourys-projects.vercel.app)**
 
 ## ✨ Key Features
 
