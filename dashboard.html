@@ -10,12 +10,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     
-    <!-- Premium Design System -->
-    <link rel="stylesheet" href="premium-colors.css">
-    <link rel="stylesheet" href="responsive-design.css">
-    <link rel="stylesheet" href="dashboard-styles.css">
-    <link rel="stylesheet" href="mvc-styles.css">
-    <link rel="stylesheet" href="mvc-utilities.css">
+    <!-- Unified CSS File - All styles in one place -->
+    <link rel="stylesheet" href="unified-final-styles.css">
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -161,7 +157,7 @@
                         <h3>JSON Parser</h3>
                         <p>Specialized parser for JSON files</p>
                         <div class="parser-status">
-                            <span class="status-badge">Available</span>
+                            <span class="status-badge available">Available</span>
                         </div>
                     </div>
                     
@@ -172,7 +168,7 @@
                         <h3>Excel Parser</h3>
                         <p>Advanced Excel file processing</p>
                         <div class="parser-status">
-                            <span class="status-badge">Available</span>
+                            <span class="status-badge available">Available</span>
                         </div>
                     </div>
                     
@@ -183,7 +179,7 @@
                         <h3>CSV Parser</h3>
                         <p>Comma-separated values parser</p>
                         <div class="parser-status">
-                            <span class="status-badge">Coming Soon</span>
+                            <span class="status-badge coming-soon">Coming Soon</span>
                         </div>
                     </div>
                 </div>
@@ -233,14 +229,25 @@
                 <!-- Table View -->
                 <div class="data-display" id="tableDisplay">
                     <div class="table-container">
-                        <table id="dataTable">
-                            <thead id="tableHead"></thead>
-                            <tbody id="tableBody"></tbody>
-                        </table>
-                    </div>
-                    <div class="table-info">
-                        <span id="recordCount">0 records</span>
-                        <span id="columnCount">0 columns</span>
+                        <div class="table-info">
+                            <h3><i class="fas fa-table"></i> Data Table</h3>
+                            <div class="table-stats">
+                                <div class="table-stat">
+                                    <i class="fas fa-list"></i>
+                                    <span id="recordCount">0 records</span>
+                                </div>
+                                <div class="table-stat">
+                                    <i class="fas fa-columns"></i>
+                                    <span id="columnCount">0 columns</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-scrollable" id="tableContainer">
+                            <table id="dataTable">
+                                <thead id="tableHead"></thead>
+                                <tbody id="tableBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -314,13 +321,39 @@
     <div class="modal" id="detailModal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-user"></i> Record Details</h3>
-                <button class="modal-close" onclick="closeModal()">
-                    <i class="fas fa-times"></i>
-                </button>
+                <div class="modal-nav-info">
+                    <h3><i class="fas fa-user"></i> Record Details</h3>
+                    <div class="record-counter" id="recordCounter">
+                        <span id="currentRecordIndex">1</span> of <span id="totalRecords">1</span>
+                    </div>
+                </div>
+                <div class="modal-controls">
+                    <button class="nav-btn prev-btn" id="prevRecordBtn" onclick="navigateRecord(-1)" title="Previous Record">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="nav-btn next-btn" id="nextRecordBtn" onclick="navigateRecord(1)" title="Next Record">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="modal-close" onclick="closeModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             </div>
             <div class="modal-body" id="modalBody">
                 <!-- Detail content will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <div class="keyboard-hints">
+                    <div class="keyboard-hint">
+                        <kbd>←</kbd><kbd>→</kbd> Navigate
+                    </div>
+                    <div class="keyboard-hint">
+                        <kbd>Esc</kbd> Close
+                    </div>
+                    <div class="keyboard-hint">
+                        <i class="fas fa-mouse-pointer"></i> Click arrows to navigate
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -465,6 +498,10 @@
         const db = new ParseFlowDB();
         let currentChart = null;
 
+        // Modal navigation state
+        let modalRecords = [];
+        let currentRecordIndex = 0;
+
         // Application initialization
         document.addEventListener('DOMContentLoaded', function() {
             console.log('ParseFlow Unified Dashboard initialized');
@@ -539,6 +576,37 @@
                     this.classList.add('active');
                 });
             });
+
+            // Contact card click handling (event delegation)
+            document.addEventListener('click', function(e) {
+                // Handle contact card clicks
+                const contactCard = e.target.closest('.contact-card');
+                if (contactCard) {
+                    const recordId = contactCard.getAttribute('data-record-id');
+                    if (recordId && !e.target.closest('.see-more-btn')) {
+                        showRecordDetails(recordId);
+                    }
+                }
+
+                // Handle table row clicks
+                const tableRow = e.target.closest('#dataTable tbody tr');
+                if (tableRow) {
+                    const recordId = tableRow.getAttribute('data-record-id');
+                    if (recordId) {
+                        showRecordDetails(recordId);
+                    }
+                }
+
+                // Handle see-more button clicks
+                const seeMoreBtn = e.target.closest('.see-more-btn');
+                if (seeMoreBtn) {
+                    e.stopPropagation(); // Prevent card click
+                    const index = seeMoreBtn.getAttribute('data-index');
+                    if (index) {
+                        toggleDescription(index, e);
+                    }
+                }
+            });
         }
 
         function showView(viewName) {
@@ -601,11 +669,25 @@
         function formatFieldName(fieldName) {
             if (!fieldName) return '';
             
+            // Handle special cases and improve formatting
             return fieldName
                 .replace(/_/g, ' ')  // Replace underscores with spaces
                 .replace(/([a-z])([A-Z])/g, '$1 $2')  // Add space before capital letters
+                .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+                .trim()  // Remove leading/trailing spaces
                 .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .map(word => {
+                    // Handle special cases
+                    if (word.toLowerCase() === 'id') return 'ID';
+                    if (word.toLowerCase() === 'email') return 'Email';
+                    if (word.toLowerCase() === 'url') return 'URL';
+                    if (word.toLowerCase() === 'api') return 'API';
+                    if (word.toLowerCase() === 'ui') return 'UI';
+                    if (word.toLowerCase() === 'ux') return 'UX';
+                    
+                    // Standard title case
+                    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                })
                 .join(' ');
         }
 
@@ -637,10 +719,17 @@
             const table = document.getElementById('dataTable');
             const tableHead = document.getElementById('tableHead');
             const tableBody = document.getElementById('tableBody');
+            const tableContainer = document.getElementById('tableContainer');
+            
+            if (!table || !tableHead || !tableBody) {
+                console.error('Table elements not found');
+                return;
+            }
             
             if (records.length === 0) {
                 tableHead.innerHTML = '<tr><th>No data available</th></tr>';
-                tableBody.innerHTML = '<tr><td>Upload some data to get started</td></tr>';
+                tableBody.innerHTML = '<tr><td class="no-data-message">Upload some data to get started</td></tr>';
+                tableContainer.classList.remove('scrollable-hint');
                 return;
             }
             
@@ -648,18 +737,30 @@
             const columns = Object.keys(records[0]).filter(key => !key.startsWith('_'));
             
             // Create table header with formatted field names
-            tableHead.innerHTML = `<tr>${columns.map(col => `<th>${formatFieldName(col)}</th>`).join('')}</tr>`;
+            tableHead.innerHTML = `<tr>${columns.map(col => `<th title="${col}">${formatFieldName(col)}</th>`).join('')}</tr>`;
             
-            // Create table body
+            // Create table body with data attributes for click handling
             tableBody.innerHTML = records.map(record => `
-                <tr onclick="showRecordDetails('${record._metadata?.id}')">
-                    ${columns.map(col => `<td>${record[col] || ''}</td>`).join('')}
+                <tr data-record-id="${record._metadata?.id}" style="cursor: pointer;">
+                    ${columns.map(col => `<td title="${record[col] || ''}">${record[col] || ''}</td>`).join('')}
                 </tr>
             `).join('');
             
             // Update info
             document.getElementById('recordCount').textContent = `${records.length} records`;
             document.getElementById('columnCount').textContent = `${columns.length} columns`;
+            
+            // Check if content is scrollable and add hint
+            setTimeout(() => {
+                const hasVerticalScroll = tableContainer.scrollHeight > tableContainer.clientHeight;
+                const hasHorizontalScroll = tableContainer.scrollWidth > tableContainer.clientWidth;
+                
+                if (hasVerticalScroll || hasHorizontalScroll) {
+                    tableContainer.classList.add('scrollable-hint');
+                } else {
+                    tableContainer.classList.remove('scrollable-hint');
+                }
+            }, 100);
         }
 
         function loadChartControls() {
@@ -825,7 +926,7 @@
                 const hasLongDescription = description.length > 100;
                 
                 return `
-                    <div class="contact-card" onclick="showRecordDetails('${record._metadata?.id}')">
+                    <div class="contact-card" data-record-id="${record._metadata?.id}" style="cursor: pointer;">
                         <div class="contact-header">
                             <div class="contact-avatar">${initials}</div>
                             <div class="contact-info">
@@ -843,7 +944,7 @@
                                     <span class="description-preview" id="preview-${index}">${shortDescription}</span>
                                     <span class="description-full" id="full-${index}">${description}</span>
                                     ${hasLongDescription ? `
-                                        <button class="see-more-btn" onclick="toggleDescription(${index}, event)">
+                                        <button class="see-more-btn" data-index="${index}" style="margin-top: 0.5rem; background: rgba(102, 126, 234, 0.1); border: none; border-radius: 5px; padding: 4px 8px; cursor: pointer;">
                                             <span class="see-more-text">See More</span>
                                         </button>
                                     ` : ''}
@@ -885,39 +986,160 @@
         }
 
         function showRecordDetails(recordId) {
-            const record = db.getAllRecords().find(r => r._metadata?.id === recordId);
-            if (!record) return;
+            // Get all records and find the current one
+            modalRecords = db.getAllRecords();
+            currentRecordIndex = modalRecords.findIndex(r => r._metadata?.id === recordId);
+            
+            if (currentRecordIndex === -1 || modalRecords.length === 0) {
+                console.error('Record not found:', recordId);
+                return;
+            }
             
             const modal = document.getElementById('detailModal');
+            if (!modal) {
+                console.error('Modal element not found');
+                return;
+            }
+            
+            // Update the modal content and show it
+            updateModalContent();
+            modal.style.display = 'flex';
+            console.log('Modal displayed for record index:', currentRecordIndex);
+        }
+
+        function updateModalContent() {
+            const record = modalRecords[currentRecordIndex];
+            if (!record) return;
+            
             const modalBody = document.getElementById('modalBody');
+            const currentRecordIndexEl = document.getElementById('currentRecordIndex');
+            const totalRecordsEl = document.getElementById('totalRecords');
+            const prevBtn = document.getElementById('prevRecordBtn');
+            const nextBtn = document.getElementById('nextRecordBtn');
+            
+            if (!modalBody) {
+                console.error('Modal body element not found');
+                return;
+            }
+            
+            // Update counter
+            if (currentRecordIndexEl) currentRecordIndexEl.textContent = currentRecordIndex + 1;
+            if (totalRecordsEl) totalRecordsEl.textContent = modalRecords.length;
+            
+            // Update navigation buttons
+            if (prevBtn) {
+                prevBtn.disabled = currentRecordIndex === 0;
+            }
+            if (nextBtn) {
+                nextBtn.disabled = currentRecordIndex === modalRecords.length - 1;
+            }
             
             const keys = Object.keys(record).filter(key => !key.startsWith('_'));
             
+            // Get primary info for header with better fallbacks
+            const name = record.name || 
+                        (record.first_name && record.last_name ? `${record.first_name} ${record.last_name}` : '') ||
+                        record.first_name || 
+                        record.last_name || 
+                        record.title || 
+                        'Unknown Contact';
+            const email = record.email || record.email_address || '';
+            const company = record.company || record.department || record.organization || '';
+            
             modalBody.innerHTML = `
                 <div class="record-details">
-                    ${keys.map(key => `
-                        <div class="detail-row">
-                            <strong>${formatFieldName(key)}:</strong>
-                            <span>${record[key] || 'N/A'}</span>
+                    <div class="record-header" style="text-align: center; padding: 1.5rem 0; border-bottom: 2px solid rgba(102, 126, 234, 0.1); margin-bottom: 1.5rem;">
+                        <div class="record-avatar" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 600;">
+                            ${name.split(' ').map(n => n[0] || '?').join('').substring(0, 2).toUpperCase()}
                         </div>
-                    `).join('')}
-                    <div class="detail-row">
-                        <strong>Uploaded:</strong>
-                        <span>${new Date(record._metadata.uploadedAt).toLocaleString()}</span>
+                        <h3 style="color: #333; margin-bottom: 0.5rem;">${name}</h3>
+                        ${email ? `<p style="color: #667eea; margin-bottom: 0.5rem;"><i class="fas fa-envelope"></i> ${email}</p>` : ''}
+                        ${company ? `<p style="color: #764ba2; font-weight: 600;"><i class="fas fa-building"></i> ${company}</p>` : ''}
                     </div>
-                    <div class="detail-row">
-                        <strong>Source File:</strong>
-                        <span>${record._metadata.fileName}</span>
+                    
+                    <div class="record-fields">
+                        <h4 style="color: #333; margin-bottom: 1rem; border-bottom: 1px solid rgba(102, 126, 234, 0.1); padding-bottom: 0.5rem;">
+                            <i class="fas fa-list" style="color: #667eea; margin-right: 8px;"></i>All Details
+                        </h4>
+                        ${keys.map(key => `
+                            <div class="detail-row">
+                                <strong><i class="fas fa-info-circle" style="color: #667eea; margin-right: 8px;"></i>${formatFieldName(key)}:</strong>
+                                <span>${record[key] || 'N/A'}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="record-metadata" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(102, 126, 234, 0.1);">
+                        <h4 style="color: #333; margin-bottom: 1rem;">
+                            <i class="fas fa-info-circle" style="color: #667eea; margin-right: 8px;"></i>Record Information
+                        </h4>
+                        <div class="detail-row">
+                            <strong><i class="fas fa-calendar" style="color: #667eea; margin-right: 8px;"></i>Uploaded:</strong>
+                            <span>${new Date(record._metadata?.uploadedAt || Date.now()).toLocaleString()}</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong><i class="fas fa-file" style="color: #667eea; margin-right: 8px;"></i>Source File:</strong>
+                            <span>${record._metadata?.fileName || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong><i class="fas fa-fingerprint" style="color: #667eea; margin-right: 8px;"></i>Record ID:</strong>
+                            <span style="font-family: monospace; background: rgba(102, 126, 234, 0.1); padding: 2px 6px; border-radius: 4px;">${record._metadata?.id || 'N/A'}</span>
+                        </div>
                     </div>
                 </div>
             `;
+        }
+
+        function navigateRecord(direction) {
+            const newIndex = currentRecordIndex + direction;
             
-            modal.style.display = 'flex';
+            if (newIndex >= 0 && newIndex < modalRecords.length) {
+                const modalBody = document.getElementById('modalBody');
+                
+                // Add transition effect
+                if (modalBody) {
+                    modalBody.classList.add('updating');
+                    setTimeout(() => {
+                        currentRecordIndex = newIndex;
+                        updateModalContent();
+                        modalBody.classList.remove('updating');
+                    }, 150);
+                } else {
+                    currentRecordIndex = newIndex;
+                    updateModalContent();
+                }
+            }
         }
 
         function closeModal() {
             document.getElementById('detailModal').style.display = 'none';
+            // Reset modal state
+            modalRecords = [];
+            currentRecordIndex = 0;
         }
+
+        // Add keyboard navigation for modal
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('detailModal');
+            if (modal && modal.style.display === 'flex') {
+                switch(e.key) {
+                    case 'ArrowLeft':
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        navigateRecord(-1);
+                        break;
+                    case 'ArrowRight':
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        navigateRecord(1);
+                        break;
+                    case 'Escape':
+                        e.preventDefault();
+                        closeModal();
+                        break;
+                }
+            }
+        });
 
         // Clear data modal functions
         function showClearDataModal() {
