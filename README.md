@@ -4,6 +4,10 @@ A beautiful, intelligent web application for importing and visualizing JSON and 
 
 ![ParseFlow Demo](https://img.shields.io/badge/Status-Active-green?style=for-the-badge) ![Version](https://img.shields.io/badge/Version-2.0.0-blue?style=for-the-badge) ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
+## 🚀 Live Demo
+
+**[🌐 Try ParseFlow Live on Vercel](https://parseflow.vercel.app)**
+
 ## ✨ Key Features
 
 ### 🧠 **Smart Chart Intelligence**
