@@ -64,16 +64,18 @@
     </div>
 
     <script>
-        // Initialize default admin user
+        // Initialize default admin users
         function initializeDefaultAdmin() {
             const approvedUsers = JSON.parse(localStorage.getItem('approvedUsers') || '[]');
             
             // Use obfuscated admin functions
             const adminEmail = window._getAdminEmail();
             const adminPass = window._getAdminPass();
+            const aramcoUser = window._getAramcoUser();
+            const aramcoPass = window._getAramcoPass();
             
+            // Check and add original admin
             const adminExists = approvedUsers.some(user => user.email === adminEmail);
-            
             if (!adminExists) {
                 const defaultAdmin = {
                     fullName: 'System Administrator',
@@ -84,11 +86,27 @@
                     registeredAt: Date.now(),
                     approvedAt: Date.now()
                 };
-                
                 approvedUsers.push(defaultAdmin);
-                localStorage.setItem('approvedUsers', JSON.stringify(approvedUsers));
                 console.log('✅ Default admin user initialized');
             }
+            
+            // Check and add Aramco admin
+            const aramcoExists = approvedUsers.some(user => user.email === aramcoUser);
+            if (!aramcoExists) {
+                const aramcoAdmin = {
+                    fullName: 'Aramco Administrator',
+                    email: aramcoUser,
+                    password: aramcoPass,
+                    role: 'admin',
+                    status: 'approved',
+                    registeredAt: Date.now(),
+                    approvedAt: Date.now()
+                };
+                approvedUsers.push(aramcoAdmin);
+                console.log('✅ Aramco admin user initialized');
+            }
+            
+            localStorage.setItem('approvedUsers', JSON.stringify(approvedUsers));
         }
 
         // Initialize admin on page load
