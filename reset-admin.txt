@@ -1,0 +1,1 @@
+Open browser console and run: localStorage.clear(); location.reload();

@@ -5,10 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, minimum-scale=1.0, maximum-scale=5.0">
     <title>ParseFlow - Unified Dashboard</title>
     
+    <script>
+        // Authentication check
+        const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+    </script>
+    
     <!-- External Libraries -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="auth-security.js"></script>
     
     <!-- Unified CSS File - All styles in one place -->
     <link rel="stylesheet" href="style.css">
@@ -54,9 +63,17 @@
             </div>
             
             <div class="nav-actions">
+                <span class="user-info" id="userInfo" style="color: white; margin-right: 1rem; display: flex; align-items: center;">
+                    <i class="fas fa-user-circle" style="margin-right: 0.5rem; font-size: 1.2rem;"></i>
+                    <span id="currentUser">User</span>
+                </span>
                 <button class="clear-btn" onclick="alert('Button clicked!'); window.showClearDataModal();" title="Clear All Data">
                     <i class="fas fa-trash"></i>
                     <span class="hidden-mobile">Clear Data</span>
+                </button>
+                <button class="logout-btn" onclick="logout()" title="Logout" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; margin-left: 8px;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="hidden-mobile">Logout</span>
                 </button>
             </div>
         </div>
@@ -400,6 +417,18 @@
 
     <!-- Unified JavaScript -->
     <script>
+        // Authentication check - redirect to login if not authenticated
+        (function() {
+            const isAuthenticated = sessionStorage.getItem('parseflow_authenticated');
+            const currentUser = sessionStorage.getItem('parseflow_user');
+            
+            if (!isAuthenticated || !currentUser) {
+                // Redirect to login page
+                window.location.href = 'login.html';
+                return;
+            }
+        })();
+        
         // Combined functionality from dashboard-script.js and mvc-init.js
         
         // Database and state management
@@ -509,10 +538,13 @@
             initializeApp();
             setupEventListeners();
             loadDashboardData();
-            showView('dashboard');
+            showView('dashboard'); // Start with dashboard view
         });
 
         function initializeApp() {
+            // Initialize user display
+            updateUserDisplay();
+            
             // Check if there's data to load from the upload page
             const uploadedData = sessionStorage.getItem('uploadedData');
             if (uploadedData) {
@@ -530,6 +562,30 @@
                     console.error('Error loading uploaded data:', error);
                 }
             }
+        }
+
+        // Authentication functions
+        function updateUserDisplay() {
+            const currentUser = sessionStorage.getItem('parseflow_user');
+            const userElement = document.getElementById('currentUser');
+            
+            if (currentUser && userElement) {
+                try {
+                    const userData = JSON.parse(currentUser);
+                    userElement.textContent = userData.email || userData.username || 'User';
+                } catch (error) {
+                    userElement.textContent = currentUser;
+                }
+            }
+        }
+
+        function logout() {
+            // Clear authentication data
+            sessionStorage.removeItem('parseflow_authenticated');
+            sessionStorage.removeItem('parseflow_user');
+            
+            // Redirect to login page
+            window.location.href = 'login.html';
         }
 
         function setupEventListeners() {
@@ -592,9 +648,9 @@
             document.addEventListener('click', function(e) {
                 // Handle contact card clicks
                 const contactCard = e.target.closest('.contact-card');
-                if (contactCard) {
+                if (contactCard && !e.target.closest('.see-more-btn')) {
                     const recordId = contactCard.getAttribute('data-record-id');
-                    if (recordId && !e.target.closest('.see-more-btn')) {
+                    if (recordId) {
                         showRecordDetails(recordId);
                     }
                 }
@@ -662,6 +718,7 @@
             updateSummaryStats();
             updateRecentActivity();
             populateFilterOptions();
+            // Load cards in dashboard view as well
             loadCards();
         }
 
@@ -1024,7 +1081,7 @@
                 const hasLongDescription = description.length > 100;
                 
                 return `
-                    <div class="contact-card" data-record-id="${record._metadata?.id}" style="cursor: pointer;">
+                    <div class="contact-card" data-record-id="${record._metadata?.id}" onclick="showRecordDetails('${record._metadata?.id}')" style="cursor: pointer;">
                         <div class="contact-header">
                             <div class="contact-avatar">${initials}</div>
                             <div class="contact-info">
@@ -1040,9 +1097,9 @@
                             ${description ? `
                                 <div class="contact-description">
                                     <span class="description-preview" id="preview-${index}">${shortDescription}</span>
-                                    <span class="description-full" id="full-${index}">${description}</span>
+                                    <span class="description-full" id="full-${index}" style="display: none;">${description}</span>
                                     ${hasLongDescription ? `
-                                        <button class="see-more-btn" data-index="${index}" style="margin-top: 0.5rem; background: rgba(102, 126, 234, 0.1); border: none; border-radius: 5px; padding: 4px 8px; cursor: pointer;">
+                                        <button class="see-more-btn" data-index="${index}" onclick="event.stopPropagation(); toggleDescription(${index}, event)" style="margin-top: 0.5rem; background: rgba(102, 126, 234, 0.1); border: none; border-radius: 5px; padding: 4px 8px; cursor: pointer;">
                                             <span class="see-more-text">See More</span>
                                         </button>
                                     ` : ''}
@@ -1065,14 +1122,14 @@
             const btn = event.target.closest('.see-more-btn');
             const btnText = btn.querySelector('.see-more-text');
             
-            if (preview.style.display === 'none') {
-                preview.style.display = 'block';
-                full.style.display = 'none';
-                btnText.textContent = 'See More';
-            } else {
+            if (full.style.display === 'none') {
                 preview.style.display = 'none';
                 full.style.display = 'block';
                 btnText.textContent = 'See Less';
+            } else {
+                preview.style.display = 'block';
+                full.style.display = 'none';
+                btnText.textContent = 'See More';
             }
         }
 
@@ -1102,7 +1159,6 @@
             // Update the modal content and show it
             updateModalContent();
             modal.style.display = 'flex';
-            console.log('Modal displayed for record index:', currentRecordIndex);
         }
 
         function updateModalContent() {
