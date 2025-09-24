@@ -221,12 +221,37 @@
                         <select id="companyFilter">
                             <option value="">All Companies</option>
                         </select>
+                        <select id="dateFieldFilter">
+                            <option value="">Filter by Date Field</option>
+                        </select>
+                        <select id="dateRangeFilter">
+                            <option value="">All Dates</option>
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="quarter">This Quarter</option>
+                            <option value="year">This Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
                         <select id="sortBy">
                             <option value="name">Sort by Name</option>
                             <option value="company">Sort by Company</option>
                             <option value="email">Sort by Email</option>
-                            <option value="date">Sort by Date Added</option>
+                            <option value="dateAdded">Sort by Date Added to ParseFlow</option>
+                            <option value="dateFilled">Sort by Date Filled</option>
                         </select>
+                    </div>
+                    
+                    <!-- Custom Date Range Inputs (hidden by default) -->
+                    <div class="date-range-inputs" id="dateRangeInputs" style="display: none; margin-top: 1rem;">
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <label>From:</label>
+                            <input type="date" id="startDate">
+                            <label>To:</label>
+                            <input type="date" id="endDate">
+                            <button onclick="applyCustomDateRange()" class="apply-date-btn">Apply</button>
+                        </div>
                     </div>
                 </div>
 
@@ -241,7 +266,7 @@
                     <button class="view-btn" data-view="json">
                         <i class="fas fa-code"></i> JSON
                     </button>
-                    <button class="export-btn" onclick="exportCardsToJson()" title="Export cards with states to JSON">
+                    <button class="view-btn export-btn" onclick="exportCardsToJson()" title="Export cards with states to JSON">
                         <i class="fas fa-download"></i> Export Cards
                     </button>
                 </div>
@@ -273,19 +298,24 @@
 
                 <!-- Cards View -->
                 <div class="data-display" id="cardsDisplay" style="display: none;">
-                    <div class="cards-container" id="cardsContainer">
-                        <!-- Cards will be dynamically generated here -->
-                    </div>
-                    <div class="pagination" id="pagination">
-                        <!-- Pagination controls will be generated here -->
-                    </div>
-                </div>
+                    <div class="cards-sections">
+                        <div class="cards-main-section">
+                            <h3><i class="fas fa-th-large"></i> Active Cards</h3>
+                            <div class="cards-container" id="cardsContainer">
+                                <!-- Cards will be dynamically generated here -->
+                            </div>
+                            <div class="pagination" id="pagination">
+                                <!-- Pagination controls will be generated here -->
+                            </div>
+                        </div>
 
-                <!-- Hidden Cards Section -->
-                <div class="hidden-cards-section" id="hiddenCardsSection" style="display: none;">
-                    <h3><i class="fas fa-eye-slash"></i> Hidden Cards</h3>
-                    <div class="hidden-cards-container" id="hiddenCardsContainer">
-                        <!-- Hidden cards will be shown here -->
+                        <!-- Hidden Cards Section -->
+                        <div class="hidden-cards-section" id="hiddenCardsSection" style="display: none;">
+                            <h3><i class="fas fa-eye-slash"></i> Hidden Cards</h3>
+                            <div class="hidden-cards-container" id="hiddenCardsContainer">
+                                <!-- Hidden cards will be shown here -->
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -425,6 +455,51 @@
         <div class="spinner"></div>
         <p id="loadingText">Processing your data...</p>
     </div>
+
+    <!-- Main Footer -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h3><i class="fas fa-chart-line"></i> ParseFlow</h3>
+                    <p>A powerful data parsing and visualization tool for JSON, CSV, and Excel files. Transform your data into meaningful insights with advanced filtering, sorting, and chart generation capabilities.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3><i class="fas fa-link"></i> Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#dashboard-view" onclick="showView('dashboard')"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a href="#upload-view" onclick="showView('upload')"><i class="fas fa-upload"></i> Upload Data</a></li>
+                        <li><a href="#data-view" onclick="showView('data')"><i class="fas fa-table"></i> View Data</a></li>
+                        <li><a href="#charts-view" onclick="showView('charts')"><i class="fas fa-chart-bar"></i> Charts</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3><i class="fas fa-file-alt"></i> Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html" target="_blank"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
+                        <li><a href="terms-conditions.html" target="_blank"><i class="fas fa-file-contract"></i> Terms & Conditions</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section developer-info">
+                    <h3><i class="fas fa-code"></i> Developer</h3>
+                    <div class="developer-name">Stephan El Khoury</div>
+                    <a href="https://stephanelkhoury.com" target="_blank" class="website-link">
+                        <i class="fas fa-globe"></i> stephanelkhoury.com
+                    </a>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>
+                    <i class="fas fa-copyright"></i> 2025 ParseFlow. All rights reserved. 
+                    Developed by <strong>Stephan El Khoury</strong>
+                </p>
+            </div>
+        </div>
+    </footer>
 
     <!-- Unified JavaScript -->
     <script>
@@ -664,6 +739,17 @@
             const sortBy = document.getElementById('sortBy');
             if (sortBy) {
                 sortBy.addEventListener('change', handleSort);
+            }
+
+            // Date filtering functionality
+            const dateFieldFilter = document.getElementById('dateFieldFilter');
+            if (dateFieldFilter) {
+                dateFieldFilter.addEventListener('change', handleDateFieldChange);
+            }
+
+            const dateRangeFilter = document.getElementById('dateRangeFilter');
+            if (dateRangeFilter) {
+                dateRangeFilter.addEventListener('change', handleDateRangeChange);
             }
 
             // View controls
@@ -985,6 +1071,30 @@
                 });
             }
             
+            // Apply date filtering
+            const dateFieldFilter = document.getElementById('dateFieldFilter')?.value;
+            const dateRangeFilter = document.getElementById('dateRangeFilter')?.value;
+            
+            if (dateFieldFilter && dateRangeFilter) {
+                records = records.filter(record => {
+                    let dateValue;
+                    
+                    // Get the date value based on selected field
+                    if (dateFieldFilter === '_metadata.uploadedAt') {
+                        dateValue = record._metadata?.uploadedAt;
+                    } else {
+                        dateValue = record[dateFieldFilter];
+                    }
+                    
+                    if (!dateValue) return false;
+                    
+                    const recordDate = new Date(dateValue);
+                    if (isNaN(recordDate.getTime())) return false;
+                    
+                    return isDateInRange(recordDate, dateRangeFilter);
+                });
+            }
+            
             // Apply sorting
             const sortBy = document.getElementById('sortBy')?.value;
             if (sortBy && records.length > 0) {
@@ -1021,6 +1131,23 @@
                             fieldA = a[emailField] || '';
                             fieldB = b[emailField] || '';
                             break;
+                        case 'dateAdded':
+                            fieldA = a._metadata?.uploadedAt || 0;
+                            fieldB = b._metadata?.uploadedAt || 0;
+                            return new Date(fieldB) - new Date(fieldA); // Most recent first
+                        case 'dateFilled':
+                            // Find the most likely date field in the data by checking both records
+                            const dateField = keys.find(key => {
+                                const valueA = a[key];
+                                const valueB = b[key];
+                                return (valueA && isDateField(key, valueA)) || (valueB && isDateField(key, valueB));
+                            });
+                            if (dateField) {
+                                const dateA = a[dateField] ? new Date(a[dateField]) : new Date(0);
+                                const dateB = b[dateField] ? new Date(b[dateField]) : new Date(0);
+                                return dateB - dateA; // Most recent first
+                            }
+                            return 0;
                         default:
                             fieldA = a[keys[0]] || '';
                             fieldB = b[keys[0]] || '';
@@ -1030,21 +1157,32 @@
                 });
             }
             
-            // Show filtered results count
-            if (searchTerm || companyFilter) {
-                const totalRecords = db.getAllRecords().length;
-                const filteredCount = records.length;
-                document.getElementById('totalRecords').textContent = `${filteredCount} of ${totalRecords}`;
+            // Filter out hidden cards before showing count
+            const cardStates = getCardStates();
+            const visibleRecords = records.filter(record => {
+                const cardId = record._metadata?.id;
+                const cardState = cardStates[cardId] || {};
+                return !cardState.hidden;
+            });
+            
+            // Show filtered results count (excluding hidden cards)
+            if (searchTerm || companyFilter || (dateFieldFilter && dateRangeFilter)) {
+                const totalVisibleRecords = db.getAllRecords().filter(record => {
+                    const cardId = record._metadata?.id;
+                    const cardState = cardStates[cardId] || {};
+                    return !cardState.hidden;
+                }).length;
+                document.getElementById('totalRecords').textContent = `${visibleRecords.length} of ${totalVisibleRecords}`;
             } else {
-                document.getElementById('totalRecords').textContent = records.length;
+                document.getElementById('totalRecords').textContent = visibleRecords.length;
             }
             
-            if (records.length === 0) {
+            if (visibleRecords.length === 0) {
                 cardsContainer.innerHTML = '<div class="no-data"><i class="fas fa-search"></i><h3>No Results Found</h3><p>Try adjusting your search criteria</p></div>';
                 return;
             }
             
-            cardsContainer.innerHTML = records.map((record, index) => {
+            cardsContainer.innerHTML = visibleRecords.map((record, index) => {
                 const keys = Object.keys(record).filter(key => !key.startsWith('_'));
                 
                 // Try to find common field names
@@ -1124,10 +1262,6 @@
                 const cardState = cardStates[cardId] || {};
                 const isDone = cardState.done || false;
                 const label = cardState.label || null;
-                const isHidden = cardState.hidden || false;
-                
-                // Skip hidden cards in main view
-                if (isHidden) return '';
                 
                 return `
                     <div class="contact-card ${isDone ? 'card-done' : ''}" data-record-id="${record._metadata?.id}" onclick="showRecordDetails('${record._metadata?.id}')" style="cursor: pointer; ${isDone ? 'opacity: 0.7;' : ''}">
@@ -1169,7 +1303,24 @@
                             ` : ''}
                         </div>
                         <div class="contact-meta">
-                            <span>Added: ${new Date(record._metadata?.uploadedAt || Date.now()).toLocaleDateString()}</span>
+                            <div class="meta-dates">
+                                <span><strong>Added:</strong> ${new Date(record._metadata?.uploadedAt || Date.now()).toLocaleDateString()}</span>
+                                <span><strong>Filled:</strong> ${(() => {
+                                    // Find the most recent date field for "Filled" date
+                                    const dateFields = keys.filter(key => {
+                                        const value = record[key];
+                                        return value && isDateField(key, value);
+                                    });
+                                    
+                                    if (dateFields.length > 0) {
+                                        const dateValue = record[dateFields[0]];
+                                        if (dateValue) {
+                                            return new Date(dateValue).toLocaleDateString();
+                                        }
+                                    }
+                                    return 'Not filled';
+                                })()}</span>
+                            </div>
                             <span class="contact-source">${record._metadata?.fileName || 'Unknown'}</span>
                         </div>
                     </div>
@@ -1860,36 +2011,185 @@
             loadCards();
         }
 
+        function handleDateFieldChange() {
+            const dateRangeFilter = document.getElementById('dateRangeFilter');
+            const dateFieldFilter = document.getElementById('dateFieldFilter');
+            
+            // Enable/disable date range filter based on field selection
+            if (dateFieldFilter.value) {
+                dateRangeFilter.disabled = false;
+            } else {
+                dateRangeFilter.disabled = true;
+                dateRangeFilter.value = '';
+            }
+            loadCards();
+        }
+
+        function handleDateRangeChange() {
+            const dateRangeInputs = document.getElementById('dateRangeInputs');
+            const dateRangeFilter = document.getElementById('dateRangeFilter');
+            
+            if (dateRangeFilter.value === 'custom') {
+                dateRangeInputs.style.display = 'block';
+            } else {
+                dateRangeInputs.style.display = 'none';
+                loadCards();
+            }
+        }
+
+        function applyCustomDateRange() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                showNotification('Please select both start and end dates', 'error');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                showNotification('Start date cannot be after end date', 'error');
+                return;
+            }
+            
+            loadCards();
+        }
+
         function populateFilterOptions() {
             const records = db.getAllRecords();
             const companyFilter = document.getElementById('companyFilter');
+            const dateFieldFilter = document.getElementById('dateFieldFilter');
             
-            if (!companyFilter || records.length === 0) return;
+            if (records.length === 0) return;
             
-            // Get unique company values
-            const companies = new Set();
-            records.forEach(record => {
-                const keys = Object.keys(record).filter(key => !key.startsWith('_'));
-                const companyField = keys.find(key => 
-                    key.toLowerCase().includes('company') || 
-                    key.toLowerCase().includes('organization') ||
-                    key.toLowerCase().includes('org')
-                );
-                if (companyField && record[companyField]) {
-                    companies.add(record[companyField]);
+            // Populate company filter
+            if (companyFilter) {
+                const companies = new Set();
+                records.forEach(record => {
+                    const keys = Object.keys(record).filter(key => !key.startsWith('_'));
+                    const companyField = keys.find(key => 
+                        key.toLowerCase().includes('company') || 
+                        key.toLowerCase().includes('organization') ||
+                        key.toLowerCase().includes('org')
+                    );
+                    if (companyField && record[companyField]) {
+                        companies.add(record[companyField]);
+                    }
+                });
+                
+                companyFilter.innerHTML = '<option value="">All Companies</option>';
+                Array.from(companies).sort().forEach(company => {
+                    const option = document.createElement('option');
+                    option.value = company;
+                    option.textContent = company;
+                    companyFilter.appendChild(option);
+                });
+            }
+            
+            // Populate date field filter
+            if (dateFieldFilter) {
+                const dateFields = new Set();
+                
+                // Add default ParseFlow date
+                dateFields.add('_metadata.uploadedAt|Date Added to ParseFlow');
+                
+                // Find potential date fields in the data
+                records.forEach(record => {
+                    const keys = Object.keys(record).filter(key => !key.startsWith('_'));
+                    keys.forEach(key => {
+                        const value = record[key];
+                        if (value && isDateField(key, value)) {
+                            dateFields.add(`${key}|${formatFieldName(key)}`);
+                        }
+                    });
+                });
+                
+                dateFieldFilter.innerHTML = '<option value="">Filter by Date Field</option>';
+                Array.from(dateFields).sort().forEach(fieldInfo => {
+                    const [fieldKey, fieldLabel] = fieldInfo.split('|');
+                    const option = document.createElement('option');
+                    option.value = fieldKey;
+                    option.textContent = fieldLabel;
+                    dateFieldFilter.appendChild(option);
+                });
+            }
+        }
+
+        function isDateField(key, value) {
+            // Check if field name suggests it's a date
+            const dateKeywords = ['date', 'time', 'created', 'modified', 'updated', 'born', 'birth', 'start', 'end'];
+            const keyLower = key.toLowerCase();
+            const hasDateKeyword = dateKeywords.some(keyword => keyLower.includes(keyword));
+            
+            if (hasDateKeyword) return true;
+            
+            // Check if value looks like a date
+            if (typeof value === 'string') {
+                // Check for common date formats
+                const datePatterns = [
+                    /^\d{4}-\d{2}-\d{2}/, // YYYY-MM-DD
+                    /^\d{2}\/\d{2}\/\d{4}/, // MM/DD/YYYY
+                    /^\d{2}-\d{2}-\d{4}/, // MM-DD-YYYY
+                    /^\d{4}\/\d{2}\/\d{2}/, // YYYY/MM/DD
+                ];
+                
+                const isDateFormat = datePatterns.some(pattern => pattern.test(value));
+                if (isDateFormat) {
+                    const parsedDate = new Date(value);
+                    return !isNaN(parsedDate.getTime());
                 }
-            });
+            }
             
-            // Clear existing options except "All Companies"
-            companyFilter.innerHTML = '<option value="">All Companies</option>';
+            return false;
+        }
+
+        function isDateInRange(date, rangeType) {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             
-            // Add company options
-            Array.from(companies).sort().forEach(company => {
-                const option = document.createElement('option');
-                option.value = company;
-                option.textContent = company;
-                companyFilter.appendChild(option);
-            });
+            switch(rangeType) {
+                case 'today':
+                    const dateToday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                    return dateToday.getTime() === today.getTime();
+                    
+                case 'yesterday':
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const dateYesterday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                    return dateYesterday.getTime() === yesterday.getTime();
+                    
+                case 'week':
+                    const weekStart = new Date(today);
+                    weekStart.setDate(today.getDate() - today.getDay());
+                    return date >= weekStart;
+                    
+                case 'month':
+                    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                    return date >= monthStart;
+                    
+                case 'quarter':
+                    const quarter = Math.floor(today.getMonth() / 3);
+                    const quarterStart = new Date(today.getFullYear(), quarter * 3, 1);
+                    return date >= quarterStart;
+                    
+                case 'year':
+                    const yearStart = new Date(today.getFullYear(), 0, 1);
+                    return date >= yearStart;
+                    
+                case 'custom':
+                    const startDate = document.getElementById('startDate')?.value;
+                    const endDate = document.getElementById('endDate')?.value;
+                    
+                    if (!startDate || !endDate) return true;
+                    
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59, 999); // Include the entire end date
+                    
+                    return date >= start && date <= end;
+                    
+                default:
+                    return true;
+            }
         }
 
         function updateChart() {
