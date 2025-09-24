@@ -241,6 +241,9 @@
                     <button class="view-btn" data-view="json">
                         <i class="fas fa-code"></i> JSON
                     </button>
+                    <button class="export-btn" onclick="exportCardsToJson()" title="Export cards with states to JSON">
+                        <i class="fas fa-download"></i> Export Cards
+                    </button>
                 </div>
 
                 <!-- Table View -->
@@ -275,6 +278,14 @@
                     </div>
                     <div class="pagination" id="pagination">
                         <!-- Pagination controls will be generated here -->
+                    </div>
+                </div>
+
+                <!-- Hidden Cards Section -->
+                <div class="hidden-cards-section" id="hiddenCardsSection" style="display: none;">
+                    <h3><i class="fas fa-eye-slash"></i> Hidden Cards</h3>
+                    <div class="hidden-cards-container" id="hiddenCardsContainer">
+                        <!-- Hidden cards will be shown here -->
                     </div>
                 </div>
 
@@ -527,6 +538,28 @@
         const db = new ParseFlowDB();
         let currentChart = null;
 
+        // Initialize card states verification
+        function initializeCardStates() {
+            console.log('Initializing card states...');
+            const cardStates = getCardStates();
+            console.log('Current card states:', Object.keys(cardStates).length, 'cards have states');
+            
+            // Verify localStorage is working
+            try {
+                localStorage.setItem('cardStates_test', 'test');
+                const test = localStorage.getItem('cardStates_test');
+                localStorage.removeItem('cardStates_test');
+                
+                if (test !== 'test') {
+                    console.error('localStorage is not working properly!');
+                    showNotification('Storage not available! Card states may not persist.', 'error');
+                }
+            } catch (error) {
+                console.error('localStorage test failed:', error);
+                showNotification('Storage error! Card states may not persist.', 'error');
+            }
+        }
+
         // Modal navigation state
         let modalRecords = [];
         let currentRecordIndex = 0;
@@ -535,6 +568,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('ParseFlow Unified Dashboard initialized');
             
+            initializeCardStates(); // Verify card states persistence
             initializeApp();
             setupEventListeners();
             loadDashboardData();
@@ -1080,8 +1114,36 @@
                 const shortDescription = description.length > 100 ? description.substring(0, 100) + '...' : description;
                 const hasLongDescription = description.length > 100;
                 
+                // Get card state
+                const cardId = record._metadata?.id;
+                if (!cardId) {
+                    console.warn('Record missing ID:', record);
+                    return '';
+                }
+                const cardStates = getCardStates();
+                const cardState = cardStates[cardId] || {};
+                const isDone = cardState.done || false;
+                const label = cardState.label || null;
+                const isHidden = cardState.hidden || false;
+                
+                // Skip hidden cards in main view
+                if (isHidden) return '';
+                
                 return `
-                    <div class="contact-card" data-record-id="${record._metadata?.id}" onclick="showRecordDetails('${record._metadata?.id}')" style="cursor: pointer;">
+                    <div class="contact-card ${isDone ? 'card-done' : ''}" data-record-id="${record._metadata?.id}" onclick="showRecordDetails('${record._metadata?.id}')" style="cursor: pointer; ${isDone ? 'opacity: 0.7;' : ''}">
+                        <div class="card-actions">
+                            <button class="action-btn done-btn ${isDone ? 'active' : ''}" onclick="event.stopPropagation(); toggleCardDone('${cardId}')" title="Mark as done">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="action-btn label-btn ${label ? 'active' : ''}" onclick="event.stopPropagation(); showLabelModal('${cardId}')" title="Add label">
+                                <i class="fas fa-tag"></i>
+                            </button>
+                            <button class="action-btn hide-btn" onclick="event.stopPropagation(); hideCard('${cardId}')" title="Hide card">
+                                <i class="fas fa-eye-slash"></i>
+                            </button>
+                        </div>
+                        ${isDone ? '<div class="done-overlay"><i class="fas fa-check-circle"></i></div>' : ''}
+                        ${label ? `<div class="card-label" style="background-color: ${label.color};">${label.text}</div>` : ''}
                         <div class="contact-header">
                             <div class="contact-avatar">${initials}</div>
                             <div class="contact-info">
@@ -1113,6 +1175,109 @@
                     </div>
                 `;
             }).join('');
+            
+            // Load hidden cards
+            loadHiddenCards();
+        }
+
+        function loadHiddenCards() {
+            const records = db.getAllRecords();
+            const cardStates = getCardStates();
+            const hiddenCardsContainer = document.getElementById('hiddenCardsContainer');
+            const hiddenCardsSection = document.getElementById('hiddenCardsSection');
+            
+            // Filter hidden cards
+            const hiddenRecords = records.filter(record => {
+                const cardId = record._metadata?.id;
+                const cardState = cardStates[cardId] || {};
+                return cardState.hidden;
+            });
+            
+            if (hiddenRecords.length === 0) {
+                hiddenCardsSection.style.display = 'none';
+                return;
+            }
+            
+            hiddenCardsSection.style.display = 'block';
+            hiddenCardsContainer.innerHTML = hiddenRecords.map((record, index) => {
+                const keys = Object.keys(record).filter(key => !key.startsWith('_'));
+                const nameField = keys.find(key => 
+                    key.toLowerCase().includes('name') || 
+                    key.toLowerCase().includes('full') ||
+                    key.toLowerCase() === 'name' ||
+                    key.toLowerCase() === 'fullname'
+                ) || keys[0];
+                
+                const companyField = keys.find(key => 
+                    key.toLowerCase().includes('company') || 
+                    key.toLowerCase().includes('organization') ||
+                    key.toLowerCase().includes('org')
+                ) || keys[1];
+                
+                const fullName = record[nameField] || 'Unknown Contact';
+                const company = record[companyField] || 'No Company';
+                
+                const nameStr = fullName.toString().trim();
+                let initials = '??';
+                
+                if (nameStr && nameStr !== 'Unknown Contact' && nameStr.length > 0) {
+                    const cleanName = nameStr.replace(/[^a-zA-Z\s]/g, '').trim();
+                    if (cleanName.length > 0) {
+                        const nameParts = cleanName.split(/\s+/).filter(part => part.length > 0);
+                        
+                        if (nameParts.length >= 2) {
+                            initials = (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+                        } else if (nameParts.length === 1) {
+                            const singleName = nameParts[0];
+                            if (singleName.length >= 2) {
+                                initials = (singleName[0] + singleName[1]).toUpperCase();
+                            } else if (singleName.length === 1) {
+                                initials = (singleName[0] + singleName[0]).toUpperCase();
+                            }
+                        }
+                    }
+                }
+                
+                if (initials.length !== 2) {
+                    initials = '??';
+                }
+                
+                return `
+                    <div class="contact-card hidden-card" data-record-id="${record._metadata?.id}" style="opacity: 0.6; border: 2px dashed #ccc;">
+                        <div class="card-actions">
+                            <button class="action-btn restore-btn" onclick="event.stopPropagation(); restoreCard('${record._metadata?.id}')" title="Restore card">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="contact-header">
+                            <div class="contact-avatar">${initials}</div>
+                            <div class="contact-info">
+                                <h3>${fullName}</h3>
+                                <div class="company">${company}</div>
+                            </div>
+                        </div>
+                        <div class="contact-meta">
+                            <span class="hidden-badge"><i class="fas fa-eye-slash"></i> Hidden</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function restoreCard(cardId) {
+            console.log('Restoring card:', cardId);
+            const cardStates = getCardStates();
+            
+            if (cardStates[cardId]) {
+                delete cardStates[cardId].hidden;
+                delete cardStates[cardId].hiddenAt;
+                cardStates[cardId].lastModified = Date.now();
+            }
+            
+            if (saveCardStates(cardStates)) {
+                loadCards(); // Refresh both main and hidden cards
+                showNotification('Card restored successfully!', 'success');
+            }
         }
 
         function toggleDescription(index, event) {
@@ -1370,6 +1535,224 @@
             // Add the last field
             result.push(current);
             return result;
+        }
+
+        // Card Management Functions
+        function getCardStates() {
+            try {
+                return JSON.parse(localStorage.getItem('cardStates') || '{}');
+            } catch (error) {
+                console.error('Error loading card states:', error);
+                return {};
+            }
+        }
+
+        function saveCardStates(cardStates) {
+            try {
+                localStorage.setItem('cardStates', JSON.stringify(cardStates));
+                console.log('Card states saved successfully');
+                return true;
+            } catch (error) {
+                console.error('Error saving card states:', error);
+                showNotification('Failed to save card state!', 'error');
+                return false;
+            }
+        }
+
+        function toggleCardDone(cardId) {
+            console.log('Toggling done state for card:', cardId);
+            const cardStates = getCardStates();
+            
+            if (!cardStates[cardId]) {
+                cardStates[cardId] = {};
+            }
+            
+            cardStates[cardId].done = !cardStates[cardId].done;
+            cardStates[cardId].lastModified = Date.now();
+            
+            if (saveCardStates(cardStates)) {
+                loadCards(); // Refresh the cards display
+                showNotification(cardStates[cardId].done ? 'Card marked as done!' : 'Card unmarked!', 'success');
+            }
+        }
+
+        function showLabelModal(cardId) {
+            // Create modal HTML if it doesn't exist
+            let modal = document.getElementById('labelModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'labelModal';
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Add Label</h3>
+                            <button class="close-btn" onclick="closeLabelModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Label Text:</label>
+                                <input type="text" id="labelText" maxlength="50" placeholder="Enter label text">
+                            </div>
+                            <div class="form-group">
+                                <label>Description:</label>
+                                <textarea id="labelDescription" rows="3" placeholder="Optional description"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Color:</label>
+                                <div class="color-picker">
+                                    <button class="color-btn" data-color="#ff4757" style="background-color: #ff4757;"></button>
+                                    <button class="color-btn" data-color="#ff6b6b" style="background-color: #ff6b6b;"></button>
+                                    <button class="color-btn" data-color="#feca57" style="background-color: #feca57;"></button>
+                                    <button class="color-btn" data-color="#48dbfb" style="background-color: #48dbfb;"></button>
+                                    <button class="color-btn" data-color="#0abde3" style="background-color: #0abde3;"></button>
+                                    <button class="color-btn" data-color="#1dd1a1" style="background-color: #1dd1a1;"></button>
+                                    <button class="color-btn" data-color="#10ac84" style="background-color: #10ac84;"></button>
+                                    <button class="color-btn active" data-color="#667eea" style="background-color: #667eea;"></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-secondary" onclick="closeLabelModal()">Cancel</button>
+                            <button class="btn-primary" onclick="saveLabelModal()">Save Label</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                // Add color picker event listeners
+                modal.querySelectorAll('.color-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        modal.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+            }
+            
+            // Load existing label if any
+            const cardStates = getCardStates();
+            const existingLabel = cardStates[cardId]?.label;
+            
+            console.log('Loading label modal for card:', cardId, 'existing label:', existingLabel);
+            
+            if (existingLabel) {
+                document.getElementById('labelText').value = existingLabel.text || '';
+                document.getElementById('labelDescription').value = existingLabel.description || '';
+                modal.querySelectorAll('.color-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.color === existingLabel.color);
+                });
+            } else {
+                document.getElementById('labelText').value = '';
+                document.getElementById('labelDescription').value = '';
+                // Ensure at least one color is selected by default
+                const defaultColorBtn = modal.querySelector('.color-btn[data-color="#667eea"]');
+                if (defaultColorBtn) {
+                    modal.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
+                    defaultColorBtn.classList.add('active');
+                }
+            }
+            
+            // Store current card ID for saving
+            modal.dataset.cardId = cardId;
+            modal.style.display = 'flex';
+        }
+
+        function closeLabelModal() {
+            document.getElementById('labelModal').style.display = 'none';
+        }
+
+        function saveLabelModal() {
+            const modal = document.getElementById('labelModal');
+            const cardId = modal.dataset.cardId;
+            const text = document.getElementById('labelText').value.trim();
+            const description = document.getElementById('labelDescription').value.trim();
+            const selectedColor = modal.querySelector('.color-btn.active')?.dataset.color;
+            
+            console.log('Saving label for card:', cardId, { text, description, selectedColor });
+            
+            if (!text) {
+                showNotification('Please enter label text!', 'error');
+                return;
+            }
+            
+            if (!selectedColor) {
+                showNotification('Please select a color!', 'error');
+                return;
+            }
+            
+            const cardStates = getCardStates();
+            if (!cardStates[cardId]) {
+                cardStates[cardId] = {};
+            }
+            
+            cardStates[cardId].label = {
+                text: text,
+                description: description,
+                color: selectedColor,
+                createdAt: cardStates[cardId].label?.createdAt || Date.now(),
+                lastModified: Date.now()
+            };
+            
+            if (saveCardStates(cardStates)) {
+                closeLabelModal();
+                loadCards(); // Refresh the cards display
+                showNotification('Label saved successfully!', 'success');
+            }
+        }
+
+        function hideCard(cardId) {
+            if (confirm('Are you sure you want to hide this card?')) {
+                console.log('Hiding card:', cardId);
+                const cardStates = getCardStates();
+                
+                if (!cardStates[cardId]) {
+                    cardStates[cardId] = {};
+                }
+                
+                cardStates[cardId].hidden = true;
+                cardStates[cardId].hiddenAt = Date.now();
+                cardStates[cardId].lastModified = Date.now();
+                
+                if (saveCardStates(cardStates)) {
+                    loadCards(); // Refresh the cards display
+                    showNotification('Card hidden successfully!', 'success');
+                }
+            }
+        }
+
+        function exportCardsToJson() {
+            const records = db.getAllRecords();
+            const cardStates = getCardStates();
+            
+            // Merge card data with states
+            const exportData = records.map(record => {
+                const cardId = record._metadata?.id;
+                const cardState = cardStates[cardId] || {};
+                
+                return {
+                    ...record,
+                    _cardState: {
+                        isDone: cardState.done || false,
+                        isHidden: cardState.hidden || false,
+                        label: cardState.label || null,
+                        modifiedAt: cardState.done || cardState.hidden || cardState.label ? Date.now() : null
+                    }
+                };
+            });
+            
+            // Create and download JSON file
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `parseflow_cards_export_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Cards exported to JSON successfully!', 'success');
         }
 
         // File handling functions
