@@ -137,8 +137,8 @@
                         <i class="fas fa-cloud-upload-alt"></i>
                     </div>
                     <h3>Drop your files here</h3>
-                    <p>Supports JSON and Excel files (.xlsx, .xls)</p>
-                    <input type="file" id="fileInput" accept=".json,.xlsx,.xls" multiple hidden>
+                    <p>Supports JSON, CSV, and Excel files (.json, .csv, .xlsx, .xls)</p>
+                    <input type="file" id="fileInput" accept=".json,.csv,.xlsx,.xls" multiple hidden>
                     <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
                         <i class="fas fa-plus"></i> Choose Files
                     </button>
@@ -189,14 +189,14 @@
                         </div>
                     </div>
                     
-                    <div class="parser-card">
+                    <div class="parser-card active">
                         <div class="parser-icon">
                             <i class="fas fa-file-csv"></i>
                         </div>
                         <h3>CSV Parser</h3>
-                        <p>Comma-separated values parser</p>
+                        <p>Comma-separated values parser with proper quote handling</p>
                         <div class="parser-status">
-                            <span class="status-badge coming-soon">Coming Soon</span>
+                            <span class="status-badge active">Active</span>
                         </div>
                     </div>
                 </div>
@@ -1312,6 +1312,66 @@
             closeClearDataModal();
         }
 
+        // CSV Parser function
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            if (lines.length === 0) return [];
+            
+            // Parse the header row
+            const headers = parseCSVLine(lines[0]);
+            const records = [];
+            
+            // Parse data rows
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                if (values.length === headers.length) {
+                    const record = {};
+                    headers.forEach((header, index) => {
+                        record[header.trim()] = values[index]?.trim() || '';
+                    });
+                    records.push(record);
+                }
+            }
+            
+            return records;
+        }
+
+        // Helper function to parse a single CSV line with proper comma and quote handling
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            let i = 0;
+            
+            while (i < line.length) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        // Escaped quote
+                        current += '"';
+                        i += 2;
+                    } else {
+                        // Toggle quote state
+                        inQuotes = !inQuotes;
+                        i++;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    // Field separator
+                    result.push(current);
+                    current = '';
+                    i++;
+                } else {
+                    current += char;
+                    i++;
+                }
+            }
+            
+            // Add the last field
+            result.push(current);
+            return result;
+        }
+
         // File handling functions
         function handleFileSelect(event) {
             const files = Array.from(event.target.files);
@@ -1371,6 +1431,8 @@
                         
                         if (file.name.endsWith('.json')) {
                             data = JSON.parse(e.target.result);
+                        } else if (file.name.endsWith('.csv')) {
+                            data = parseCSV(e.target.result);
                         } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
                             const workbook = XLSX.read(e.target.result, { type: 'binary' });
                             const sheetName = workbook.SheetNames[0];
@@ -1392,7 +1454,7 @@
                     }
                 };
                 
-                if (file.name.endsWith('.json')) {
+                if (file.name.endsWith('.json') || file.name.endsWith('.csv')) {
                     reader.readAsText(file);
                 } else {
                     reader.readAsBinaryString(file);
